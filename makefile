@@ -1,5 +1,5 @@
 GULP=gulp --require=LiveScript
-CBIN=./.cabal-sandbox/bin/
+CBIN=~/.bins
 
 build: build-client
 
