@@ -13,6 +13,8 @@ import Data.Monoid (mappend)
 import qualified Data.Text          as T
 import qualified Data.Text.IO       as T
 
+import Control.Monad (forever)
+
 import API
 
 
@@ -21,17 +23,28 @@ main = WS.runServer "0.0.0.0" 8080 app where
 
   app pending = do
     connection <- WS.acceptRequest pending
-    request    <- WS.receiveData connection 
-    WS.sendTextData connection (forRequest request) 
+    WS.forkPingThread connection 30
+    forever $ do
+      request  <- WS.receiveData connection 
+      response <- forRequest request 
+      WS.sendTextData connection response
 
   forRequest = handle onParse WParseError where
-    onParse = WEcho 
+    onParse request = return (WEcho request) 
 
 
-handle :: (FromJSON a, ToJSON b, ToJSON c) => (a -> b) -> c -> ByteString -> ByteString
+handle :: (Monad m, FromJSON a, ToJSON b, ToJSON c) 
+       => (a -> m b) 
+       -> c 
+       -> ByteString 
+       -> m ByteString
+
 handle onParse onFail message = 
   let parsed = decode message in case parsed of
-    (Just instruction) -> encode $ onParse instruction  
-    Nothing            -> encode $ onFail
+    (Just instruction) -> do
+      result <- onParse instruction
+      return (encode result) 
+    Nothing -> 
+      return (encode onFail)
 
 

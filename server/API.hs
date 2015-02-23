@@ -59,7 +59,7 @@ instance ToJSON WikiTRes where
 
 
 instance ToJSON WikiTErr where
-  toJSON err = object ["status" .= status, "msg" .= body] where  
+  toJSON err = object ["status" .= status, "message" .= body] where  
 
     status :: Text
     status = "error"
