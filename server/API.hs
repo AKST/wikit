@@ -62,10 +62,12 @@ instance ToJSON WikiTRes where
       status = "ok" :: Text
 
       body = case res of 
-        WEcho r -> toJSON r
+        WEcho r      -> toJSON r
+        WRevisions r -> toJSON r
 
       bodyType = case res of
-        WEcho _ -> "echo" :: Text
+        WEcho _      -> "echo" :: Text
+        WRevisions _ -> "revisions" 
 
       
 

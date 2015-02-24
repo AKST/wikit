@@ -29,7 +29,7 @@ handle request = void . dispatch $ do
   case request of
     WStart name -> do
       revisions <- getRevisions (wikiQuery { article = name }) 
-      yieldResponse revisions
+      yieldResponse (WRevisions revisions)
     _ ->
       yieldResponse (WEcho request) 
 
