@@ -23,55 +23,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Except
 
-import Connection
-import API
-
--- http://en.wikipedia.org/w/api.php
---   ?action=query
---   &prop=revisions
---   &titles=Adolf%20Hitler
---   &rvprop=content|timestamp
---   &rvlimit=2
---   &format=JSON
-
-data ArticleRevisions = ArticleRevisions {
-  revisionContinue :: Word32,
-  title  :: Text,
-  pageId :: Word32,
-  pages :: [Revision]  
-}
-
-data Revision = Revision {
-  timestamp :: UTCTime,
-  contentFormat :: Text,
-  contentModel :: Text,
-  revisionBody :: Text
-}
-
-instance FromJSON ArticleRevisions where
-  parseJSON (Object v) =
-    ArticleRevisions <$> ((v .: "query-continue") >>= (.: "revisions") >>= (.: "rvcontinue")) 
-                     <*> fromArticle "title"
-                     <*> fromArticle "pageid"
-                     <*> fromArticle "revisions"
-
-    where fromArticle key = do
-            articles <- (v .: "query") >>= (.: "pages")
-            case HM.elems (articles :: HM.HashMap Text Value) of 
-              Object v:_ -> v .: key
-              _   -> mzero
-
-  parseJSON _ = mzero
-    
-
-instance FromJSON Revision where
-  parseJSON (Object v) =
-    Revision <$> v .: "timestamp"
-             <*> v .: "contentformat" 
-             <*> v .: "contentmodel"
-             <*> v .: "*"
-  parseJSON _ = mzero
-    
+import Common
 
 
 data RevisionQuery = RevisionQuery {
@@ -122,9 +74,18 @@ getRevisions query = do
 
     baseQuery = "?action=query"
              ++ "&prop=revisions"
-             ++ "&titles=" ++ (urlEncode (show (article query)))
+             ++ "&titles=" ++ (urlEncode (T.unpack (article query)))
              ++ "&rvprop=content|timestamp"
              ++ "&rvlimit=" ++ show (rvlimit query)
-             ++ "&format=JSON"
+             ++ "&format=json"
+
+
+-- http://en.wikipedia.org/w/api.php
+--   ?action=query
+--   &prop=revisions
+--   &titles=Adolf%20Hitler
+--   &rvprop=content|timestamp
+--   &rvlimit=2
+--   &format=JSON
 
 

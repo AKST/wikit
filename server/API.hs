@@ -14,14 +14,7 @@ import Data.ByteString.Lazy
 
 import Control.Monad
 
-
--- # connection monad errors
-
-data ConnError 
-  = FailedConnection HTTP.ConnError
-  | WikiResponseNotOk (HTTP.Response ByteString)
-  | CouldNotParseArticle ByteString
-  deriving Show
+import Common
 
 -- # Format of incoming messages
 
@@ -33,6 +26,7 @@ data WikiTReq
 
 data WikiTRes 
   = WEcho WikiTReq
+  | WRevisions ArticleRevisions
 
 data WikiTErr 
   = WParseError

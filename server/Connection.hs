@@ -25,6 +25,7 @@ import Control.Monad.Reader
 import Control.Monad.Except
 import Control.Concurrent
 
+import Common
 import API
 
 
@@ -39,9 +40,8 @@ withOptions options conn = runExceptT (runReaderT (runConn conn) options)
 
 
 runConnection :: ConnOpts -> Conn a -> IO ()
-runConnection options conn = forever $ do
-  result <- withOptions options conn
-  print "finished request"
+runConnection options conn = 
+  forever (withOptions options conn)
 
 
 awaitData :: WS.WebSocketsData a => Conn a

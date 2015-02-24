@@ -9,11 +9,11 @@ import Data.Aeson
 import Data.Text (Text)
 import Data.ByteString.Lazy (ByteString)
 import Data.Monoid (mappend)
-
 import qualified Data.Text    as T
 import qualified Data.Text.IO as T
 
 import Control.Monad (forever, void)
+import Control.Applicative
 
 import Connection
 import Wikipedia
@@ -26,7 +26,12 @@ handle request = void . dispatch $ do
   -- The handle forks the thread to allow the 
   -- connection to accept additional jobs
   --
-  yieldResponse (WEcho request) 
+  case request of
+    WStart name -> do
+      revisions <- getRevisions (wikiQuery { article = name }) 
+      yieldResponse revisions
+    _ ->
+      yieldResponse (WEcho request) 
 
 
 main :: IO ()
@@ -39,7 +44,7 @@ main = WS.runServer "0.0.0.0" 8080 $ \pending -> do
   -- the client, otherwise it will handle the request as normal
   -- 
   runConnection (ConnOpts connection) $
-    fmap decode awaitData >>= \case 
+    decode <$> awaitData >>= \case 
       Nothing          -> yieldResponse WParseError
       Just instruction -> handle instruction
 
