@@ -1,5 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 
 import qualified Network.WebSockets as WS
@@ -13,38 +13,25 @@ import Data.Monoid (mappend)
 import qualified Data.Text          as T
 import qualified Data.Text.IO       as T
 
-import Control.Monad (forever)
+import Control.Monad (forever, void)
 
+import Connection
+import Wikipedia
 import API
 
 
+handle :: WikiTReq -> Conn ()
+handle request = void . dispatch $ do 
+  yieldResponse (WEcho request) 
+
+
 main :: IO ()
-main = WS.runServer "0.0.0.0" 8080 app where 
-
-  app pending = do
-    connection <- WS.acceptRequest pending
-    WS.forkPingThread connection 30
-    forever $ do
-      request  <- WS.receiveData connection 
-      response <- forRequest request 
-      WS.sendTextData connection response
-
-  forRequest = handle onParse WParseError where
-    onParse request = return (WEcho request) 
-
-
-handle :: (Monad m, FromJSON a, ToJSON b, ToJSON c) 
-       => (a -> m b) 
-       -> c 
-       -> ByteString 
-       -> m ByteString
-
-handle onParse onFail message = 
-  let parsed = decode message in case parsed of
-    (Just instruction) -> do
-      result <- onParse instruction
-      return (encode result) 
-    Nothing -> 
-      return (encode onFail)
+main = WS.runServer "0.0.0.0" 8080 $ \pending -> do
+  connection <- WS.acceptRequest pending
+  WS.forkPingThread connection 30
+  runConnection (ConnOpts connection) $
+    fmap decode awaitData >>= \case 
+      Nothing          -> yieldResponse WParseError
+      Just instruction -> handle instruction
 
 
