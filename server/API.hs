@@ -3,21 +3,40 @@
 module API where
 
 
+import qualified Network.HTTP   as HTTP
+import qualified Network.Stream as HTTP
+
 import Data.Word
 import Data.Aeson
 import Data.Text (Text)
 
+import Data.ByteString.Lazy
+
+import Control.Monad
+
+
+-- # connection monad errors
+
+data ConnError 
+  = FailedConnection HTTP.ConnError
+  | WikiResponseNotOk (HTTP.Response ByteString)
+  | CouldNotParseArticle ByteString
+  deriving Show
 
 -- # Format of incoming messages
 
-data WikiTReq = WStart Text
-              | WRange Text Word32 Word32
+data WikiTReq 
+  = WStart Text
+  | WRange Text Word32 Word32
 
 -- # Responses
 
-data WikiTRes = WEcho WikiTReq
+data WikiTRes 
+  = WEcho WikiTReq
 
-data WikiTErr = WParseError
+data WikiTErr 
+  = WParseError
+  | WInternalError ConnError
 
 -- # Serialisation
 
@@ -29,6 +48,8 @@ instance FromJSON WikiTReq where
     return $ case (from, to) of
       (Just f, Just t) -> WRange name f t
       (_     , _     ) -> WStart name
+
+  parseJSON _ = mzero
                       
 instance ToJSON WikiTReq where
   toJSON (WStart name) = 
@@ -44,28 +65,23 @@ instance ToJSON WikiTRes where
         "contents" .= body,
         "type"     .= bodyType]] 
     where
-
-      status :: Text
-      status = "ok"
+      status = "ok" :: Text
 
       body = case res of 
         WEcho r -> toJSON r
 
-      bodyType :: Text
       bodyType = case res of
-        WEcho _ -> "echo"
+        WEcho _ -> "echo" :: Text
 
       
-
 
 instance ToJSON WikiTErr where
   toJSON err = object ["status" .= status, "message" .= body] where  
 
-    status :: Text
-    status = "error"
+    status = "error" :: Text
     
-    body :: Text
     body = case err of
-      WParseError -> "could not parse request" 
+      WParseError      -> "could not parse request" :: Text 
+      WInternalError _ -> "internal error occured" 
 
 
