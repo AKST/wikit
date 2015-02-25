@@ -4,6 +4,7 @@
 
 module Connection where
 
+import qualified System.Log.Logger as L
 
 import Network.URI
 import qualified Network.HTTP       as HTTP 
@@ -40,7 +41,8 @@ withOptions options conn = runExceptT (runReaderT (runConn conn) options)
 
 
 runConnection :: ConnOpts -> Conn a -> IO ()
-runConnection options conn = 
+runConnection options conn = do 
+  L.updateGlobalLogger "wikit" (L.setLevel L.INFO)
   forever (withOptions options conn)
 
 
@@ -73,9 +75,16 @@ dispatch task = ask >>= \options ->
       liftIO (putStrLn ("An error occured,\n  " ++ show result))
 
 
+{-- UTILITY --}
+
+
 get :: URI -> Conn (HTTP.Response ByteString)
 get url = liftIO (HTTP.simpleHTTP (HTTP.mkRequest HTTP.GET url)) >>= \case 
   Left error -> throwError (FailedConnection error)
   Right resp -> return resp
   
+
+log :: L.Priority -> String -> Conn ()
+log ltype message = liftIO (L.logM "wikit.socket" ltype ("[wikit] " ++ message)) 
+
 

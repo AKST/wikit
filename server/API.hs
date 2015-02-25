@@ -20,7 +20,7 @@ import Common
 
 data WikiTReq 
   = WStart Text
-  | WRange Text Word32 Word32
+  | WCont Text Word32
 
 -- # Responses
 
@@ -37,19 +37,18 @@ data WikiTErr
 instance FromJSON WikiTReq where
   parseJSON (Object v) = do 
     name <- v .:  "name"
-    from <- v .:? "from"
-    to   <- v .:? "to"
-    return $ case (from, to) of
-      (Just f, Just t) -> WRange name f t
-      (_     , _     ) -> WStart name
+    cont <- v .:? "continue"
+    return $ case cont of
+      Just c -> WCont name c
+      _____  -> WStart name
 
   parseJSON _ = mzero
                       
 instance ToJSON WikiTReq where
   toJSON (WStart name) = 
     object ["name" .= name] 
-  toJSON (WRange name f t) = 
-    object ["name" .= name, "from" .= f, "to" .= t]
+  toJSON (WCont name c) = 
+    object ["name" .= name, "continue" .= c]
 
 
 instance ToJSON WikiTRes where 

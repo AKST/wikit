@@ -1,8 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
+import Prelude hiding (log)
 
 import qualified Network.WebSockets as WS
+
+import System.Log (Priority(INFO))
 
 import Data.Word
 import Data.Aeson
@@ -28,10 +31,15 @@ handle request = void . dispatch $ do
   --
   case request of
     WStart name -> do
+      log INFO ("fetching the revisions for \"" ++ T.unpack name ++ "\"")
       revisions <- getRevisions (wikiQuery { article = name }) 
       yieldResponse (WRevisions revisions)
-    _ ->
-      yieldResponse (WEcho request) 
+    WCont name cont -> do
+      log INFO ("continuing the revisions for \"" ++ T.unpack name ++ "\"")
+      revisions <- getRevisions (wikiQuery { 
+        article    = name, 
+        rvcontinue = Just cont }) 
+      yieldResponse (WRevisions revisions)
 
 
 main :: IO ()
