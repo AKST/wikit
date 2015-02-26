@@ -2,8 +2,26 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Connection where
+module Connection (
 
+  ConnOpts,
+  Conn,
+  initWS,
+  withOptions,
+  runConnection,
+  awaitData,
+  yieldData,
+  yieldResponse,
+  dispatchVoid,
+  dispatch,
+  get,
+  log
+
+) where
+
+import Prelude hiding (log)
+
+import System.Locale
 import qualified System.Log.Logger as L
 
 import Network.URI
@@ -11,8 +29,10 @@ import qualified Network.HTTP       as HTTP
 import qualified Network.Stream     as HTTP
 import qualified Network.WebSockets as WS
 
+import Data.Time 
 import Data.Word
 import Data.Aeson
+-- import Data.Clock
 import Data.Text (Text)
 import Data.ByteString.Lazy (ByteString)
 import Data.Monoid (mappend)
@@ -36,14 +56,27 @@ newtype Conn a = Conn { runConn :: ReaderT ConnOpts (ExceptT ConnError IO) a }
   deriving (Functor, Applicative, Monad, MonadReader ConnOpts, MonadError ConnError, MonadIO)
 
 
+initWS address port onConnection = do
+  L.updateGlobalLogger "wikit" (L.setLevel L.INFO)
+  ioLog L.INFO ("live @ ws://" ++ address ++ ":" ++ show port)
+
+  WS.runServer address port $ \pending -> do
+    connection <- WS.acceptRequest pending
+    WS.forkPingThread connection 30
+    --
+    -- This runs forever, and wil decode incoming requests,
+    -- if unsuccessful it will just return a parse error to
+    -- the client, otherwise it will handle the request as normal
+    -- 
+    runConnection (ConnOpts connection) onConnection
+
+
 withOptions :: ConnOpts -> Conn a -> IO (Either ConnError a)
 withOptions options conn = runExceptT (runReaderT (runConn conn) options)
 
 
 runConnection :: ConnOpts -> Conn a -> IO ()
-runConnection options conn = do 
-  L.updateGlobalLogger "wikit" (L.setLevel L.INFO)
-  forever (withOptions options conn)
+runConnection options conn = forever (withOptions options conn)
 
 
 awaitData :: WS.WebSocketsData a => Conn a
@@ -61,6 +94,7 @@ yieldData response = do
 yieldResponse :: ToJSON a => a -> Conn ()
 yieldResponse response = yieldData (encode response)
 
+dispatchVoid = void . dispatch
 
 dispatch :: Conn a -> Conn ThreadId
 dispatch task = ask >>= \options ->
@@ -72,7 +106,7 @@ dispatch task = ask >>= \options ->
   liftIO . forkIO . void . withOptions options $
     catchError (void task) $ \result -> do
       yieldResponse (WInternalError result)
-      liftIO (putStrLn ("An error occured,\n  " ++ show result))
+      log L.ERROR ("An error occured,\n  " ++ show result)
 
 
 {-- UTILITY --}
@@ -85,6 +119,11 @@ get url = liftIO (HTTP.simpleHTTP (HTTP.mkRequest HTTP.GET url)) >>= \case
   
 
 log :: L.Priority -> String -> Conn ()
-log ltype message = liftIO (L.logM "wikit.socket" ltype ("[wikit] " ++ message)) 
+log ltype message = liftIO (ioLog ltype message) 
+
+
+ioLog ltype message = do 
+  epochInt <- (read <$> formatTime defaultTimeLocale "%s" <$> getCurrentTime) :: IO Int
+  L.logM "wikit.socket" ltype ("[" ++ show ltype ++ " @ " ++ show epochInt ++ "] "  ++ message)
 
 

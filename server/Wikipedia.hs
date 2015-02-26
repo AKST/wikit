@@ -3,9 +3,12 @@
 
 module Wikipedia where
 
+import Prelude hiding (log)
 
 import Network.URI
 import Network.HTTP.Base
+
+import System.Log (Priority(INFO))
 
 import Connection 
 
@@ -55,6 +58,11 @@ wikipediaURI = URI {
 
 getRevisions :: RevisionQuery -> Conn ArticleRevisions   
 getRevisions query = do
+
+  log INFO $ case rvcontinue query of
+    Nothing -> "fetching the revisions for \"" ++ T.unpack (article query) ++ "\""
+    Just ct -> "continuing the revisions for \"" ++ T.unpack (article query) ++ "\", from " ++ show ct
+
   result <- get (wikipediaURI { uriQuery = wikiQuery })
 
   unless (isOk result) $
