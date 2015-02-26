@@ -123,7 +123,7 @@ log ltype message = liftIO (ioLog ltype message)
 
 
 ioLog ltype message = do 
-  epochInt <- (read <$> formatTime defaultTimeLocale "%s" <$> getCurrentTime) :: IO Int
-  L.logM "wikit.socket" ltype ("[" ++ show ltype ++ " @ " ++ show epochInt ++ "] "  ++ message)
+  epoch <- formatTime defaultTimeLocale "%s" <$> getCurrentTime
+  L.logM "wikit.socket" ltype ("[" ++ show ltype ++ " @ " ++ epoch ++ "] "  ++ message)
 
 
