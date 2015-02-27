@@ -32,13 +32,11 @@ import qualified Network.WebSockets as WS
 import Data.Time 
 import Data.Word
 import Data.Aeson
--- import Data.Clock
 import Data.Text (Text)
 import Data.ByteString.Lazy (ByteString)
 import Data.Monoid (mappend)
 
-import qualified Data.Text    as T
-import qualified Data.Text.IO as T
+import qualified Data.Text as T
 
 import Control.Applicative
 import Control.Monad (forever)
@@ -122,6 +120,7 @@ log :: L.Priority -> String -> Conn ()
 log ltype message = liftIO (ioLog ltype message) 
 
 
+ioLog :: L.Priority -> String -> IO ()
 ioLog ltype message = do 
   epoch <- formatTime defaultTimeLocale "%s" <$> getCurrentTime
   L.logM "wikit.socket" ltype ("[" ++ show ltype ++ " @ " ++ epoch ++ "] "  ++ message)
