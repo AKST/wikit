@@ -1,25 +1,20 @@
 module Main where
-  
-import Data.Either (Either (Left, Right))
-import Control.Monad.Trans (lift)
-import Debug.Trace (trace)
 
-import HTML5.WebSocket
+import Debug.Trace (trace, Trace(..))
+
+import Control.Monad.Eff
+import qualified Control.Monad.JQuery as J
+
+import DOM
+
 
 main = do 
-  trace "Hello, world!"
-  runWebSocket $ do
-    result <- withWebSocket config handlers
-    case result of
-      Left err -> (lift <<< trace) err
-      Right _ -> (lift <<< trace) "DONE" -- rest
+  trace "Welcome to Wikit"
+  J.ready do
+    heading  <- J.create "<h1>" >>= J.setText "Hello, world!"
+    pageBody <- J.select "#app"
+    J.addClass "container" pageBody
+    heading `J.append` pageBody
 
-  where 
 
-    config = { uri: "ws://0.0.0.0:8080", protocols: ["ws"] }
-
-    handlers s = (defaultHandlers s) {
-      onOpen    = trace "OPEN",
-      onMessage = \m -> trace m
-    }
 
