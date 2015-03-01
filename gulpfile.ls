@@ -2,11 +2,15 @@ require! {
   'gulp-purescript': purescript
   'gulp-concat': concat
   'gulp-clean': clean
+  'gulp-sass': sass
   'gulp': gulp
 }
 
 
 html-source = 'client/index.html'
+
+
+scss-source = 'client/style/**/*.scss'
 
 
 temp-js = 
@@ -16,6 +20,7 @@ temp-js =
 
 js-libs = 
   * './bower_components/jquery/dist/jquery.js'
+  * './bower_components/react/react.js'
 
 
 ps-source = 
@@ -46,6 +51,12 @@ gulp.task \js <[purescript js-libs]> !->
     .pipe gulp.dest 'public/scripts'
 
 
+gulp.task \scss !->
+  gulp.src './client/style/app.scss'
+    .pipe sass!
+    .pipe gulp.dest './public/style'
+
+
 gulp.task \html !->
   gulp.src html-source
     .pipe gulp.dest 'public/.'
@@ -56,8 +67,9 @@ gulp.task \clean !->
     .pipe clean!
 
 
-gulp.task \watch <[js html]> !->
+gulp.task \watch <[js html scss]> !->
   gulp.watch client-src, [\js]
   gulp.watch html-source, [\html]
+  gulp.watch scss-source, [\scss]
 
 
