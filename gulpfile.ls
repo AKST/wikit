@@ -35,7 +35,7 @@ gulp.task \purescript !->
       output: \compiled-purescript.js
       main: \Main
     .on \error (err) !->
-      console.error err
+      console.error err.message ? err
     .pipe gulp.dest \temp
 
 
@@ -67,7 +67,8 @@ gulp.task \clean !->
     .pipe clean!
 
 
-gulp.task \watch <[js html scss]> !->
+# gulp.task \watch <[js html scss]> !->
+gulp.task \watch <[js html]> !->
   gulp.watch client-src, [\js]
   gulp.watch html-source, [\html]
   gulp.watch scss-source, [\scss]
