@@ -41,5 +41,3 @@ main = do
 onReady component props = J.ready (T.render component props)
 
 
-redirect route article =
-  setRoute ("/article/" ++ article) 

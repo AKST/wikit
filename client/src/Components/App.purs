@@ -1,4 +1,4 @@
-module Components.App where
+module Components.App (app, AppPs(), AppSt(), AppEv(..)) where
 
 import Debug.Trace (trace, Trace(..))
 
@@ -15,16 +15,15 @@ import qualified Thermite.Action as T
 import qualified Thermite.Events as T
 import qualified Thermite.Types as T
 
-
-data AppEv
-  = AppDoNothing
-  | AppSearch String
+import Components.Common
 
 
+data AppEv = AppDoNothing | AppSearch String
 type AppPs = {}
 type AppSt = {}
 
-app :: forall e. T.Spec _ AppSt _ _
+
+app :: forall e. T.Spec _ AppSt AppPs AppEv
 app = T.simpleSpec {} performAction render where
 
   performAction :: T.PerformAction AppPs AppEv _
@@ -35,28 +34,18 @@ app = T.simpleSpec {} performAction render where
     AppSearch ws -> do
       return unit
 
+  handleInput :: T.KeyboardEvent -> AppEv
   handleInput keyevent = case currentK of
     "Enter" -> AppSearch (getValue keyevent)
     _       -> AppDoNothing
     where currentK = keyCode keyevent
           currentT = getValue keyevent
 
+  render :: T.Render AppSt AppPs AppEv
   render ctx _ _ = T.div [A._id "app", A.className "container"] [
     T.h1' [T.text "Hello World"],
     T.p'  [T.text "Welcome to my home page (-:"],
     T.input [T.onKeyPress ctx handleInput] []
   ]
 
-
-foreign import getValue """
-  function getValue(e) {
-    return e.target.value;
-  }
-  """ :: T.KeyboardEvent -> String
-
-foreign import keyCode """
-  function keyCode(e) {
-    return e.key;
-  }
-  """ :: T.KeyboardEvent -> String
 
