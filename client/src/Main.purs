@@ -1,9 +1,10 @@
 module Main where
 
 
-import Debug.Trace (trace)
+import Debug.Trace (trace, Trace(..))
 
 import Network.Routing.Client
+import qualified Network.WebSocket as WS
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Class
@@ -17,25 +18,36 @@ import DOM
 
 
 main = do
-  let mainApp = T.createClass app
-      
-  runRouter do
+  socket <- WS.open "ws://0.0.0.0:8080"
+  socket `WS.onMessage` messageListener 
+  socket `WS.onError` errorListener
+  runRouter (routerConfig socket) where
 
-    articleName <- param any
-    arciclePreF <- param (exact "article")
+    messageListener message = do
+      trace message
 
-    route0 empty do
-      liftEff (trace "hello world")
-      onReady mainApp {}
+    errorListener error = do
+      trace (show error)
 
-    route1 (arciclePreF -/ articleName +/ empty) $ \name -> do
-      void $ liftEff do
-        trace ("now viewing " ++ name)
-        onReady mainApp {}
+    routerConfig socket = do
+      let mainApp = T.createClass app
+          mainPps = { socket: socket }
 
-    notFound do
-      liftEff (trace "on found, redirecting to index")
-      setRoute "/"
+      articleName <- param any
+      arciclePreF <- param (exact "article")
+
+      route0 empty do
+        liftEff (trace "hello world")
+        onReady mainApp mainPps
+
+      route1 (arciclePreF -/ articleName +/ empty) $ \name -> do
+        void $ liftEff do
+          trace ("now viewing " ++ name)
+          onReady mainApp mainPps
+
+      notFound do
+        liftEff (trace "on found, redirecting to index")
+        setRoute "/"
 
 
 onReady component props = J.ready (T.render component props)

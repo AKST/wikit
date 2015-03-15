@@ -1,4 +1,6 @@
-module Components.App (app, AppPs(), AppSt(), AppEv(..)) where
+module Components.App (app, AppPs(), AppSt(), AppEv(..), AppEf(..)) where
+
+import Data.Maybe
 
 import Debug.Trace (trace, Trace(..))
 
@@ -6,6 +8,8 @@ import Control.Monad.Eff
 import Control.Monad.Eff.Class
 
 import qualified Network.Routing.Client as R
+import qualified Network.WebSocket as WS
+import qualified Network.WebSocketAPI as WS
 
 import qualified Thermite as T
 import qualified Thermite.Html as T
@@ -19,20 +23,20 @@ import Components.Common
 
 
 data AppEv = AppDoNothing | AppSearch String
-type AppPs = {}
+type AppPs = { socket :: WS.Socket }
 type AppSt = {}
+type AppEf e = (trace :: Trace, routing :: R.Routing, ws :: WS.WebSocket | e)
 
 
-app :: forall e. T.Spec _ AppSt AppPs AppEv
+app :: forall e. T.Spec (T.Action (AppEf e) AppSt) AppSt AppPs AppEv
 app = T.simpleSpec {} performAction render where
 
-  performAction :: T.PerformAction AppPs AppEv _
-  performAction _ e = case e of 
-    AppDoNothing -> do
-      T.modifyState \_ -> {}
-      return unit
-    AppSearch ws -> do
-      return unit
+  performAction :: T.PerformAction AppPs AppEv (T.Action (AppEf e) AppSt)
+  performAction _ AppDoNothing = return unit 
+  performAction { socket: ws } (AppSearch articleName) = T.sync do
+      trace ("requesting revisions for " ++ articleName)
+      ws `WS.send` WS.serialise { name: articleName, continue: Nothing } 
+
 
   handleInput :: T.KeyboardEvent -> AppEv
   handleInput keyevent = case currentK of
