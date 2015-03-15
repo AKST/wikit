@@ -18,16 +18,20 @@ import DOM
 
 
 main = do
-  socket <- WS.open "ws://0.0.0.0:8080"
+  socket <- WS.open "ws://0.0.0.0:8080" []
   socket `WS.onMessage` messageListener 
   socket `WS.onError` errorListener
+  socket `WS.onClose` closeListener
   runRouter (routerConfig socket) where
 
     messageListener message = do
-      trace message
+      trace (show message)
 
     errorListener error = do
       trace (show error)
+
+    closeListener = do
+      trace "socket has been closed"
 
     routerConfig socket = do
       let mainApp = T.createClass app

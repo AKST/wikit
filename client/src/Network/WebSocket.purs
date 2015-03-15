@@ -4,9 +4,14 @@ module Network.WebSocket (
   WebSocket(..), 
   Socket(..), 
   SocketError(..), 
+  MessageEvent(..), 
+
   onMessage,
   onError,
-  onClose
+  onClose,
+
+  messageData
+
 ) where
 
 import Control.Monad.Eff
@@ -15,6 +20,27 @@ import Control.Monad.Eff.Class
 foreign import data WebSocket :: !
 foreign import data Socket :: *
 foreign import data SocketError :: *
+foreign import data MessageEvent :: *
+
+
+{------------------------------------------------------
+  MessageEvent
+------------------------------------------------------}
+
+foreign import messageData """
+  function messageData(messageEvent) {
+    return messageEvent.data;
+  }
+  """ :: MessageEvent -> String
+
+instance messageEvent :: Show MessageEvent where
+  show = showMessageEvent
+
+foreign import showMessageEvent """
+  function showMessageEvent(messageEvent) { 
+    return messageEvent.toString(); 
+  }
+  """ :: MessageEvent -> String
 
 
 {------------------------------------------------------
@@ -46,15 +72,23 @@ foreign import showError """
 --
 foreign import open """
   function open(url) {
-    return function () {
-      var socket = new WebSocket(url);
-      return new window.RSVP.Promise(function (resolve) {
-        socket.addEventListener("open", function (event) {
-          resolve(socket);
+    return function (protocols) {
+      return function () {
+        var socket;
+        if (protocols.length) {
+          socket = new WebSocket(url);
+        }
+        else {
+          socket = new WebSocket(url, protocols);
+        }
+        return new window.RSVP.Promise(function (resolve) {
+          socket.onopen = function (event) {
+            resolve(socket);
+          };
         });
-      });
+      };
     };
-  } """ :: forall e. String -> Eff (ws :: WebSocket | e) Socket
+  } """ :: forall e. String -> [String] -> Eff (ws :: WebSocket | e) Socket
 
 
 foreign import onEvent """ 
@@ -63,7 +97,9 @@ foreign import onEvent """
       return function (callback) {
         return function () {
           socket.then(function (socket) {
-            socket.addEventListener(eventName, callback);
+            socket.addEventListener(eventName, function (evt) {
+              callback(evt)();
+            });
           });
         };
       };
@@ -71,7 +107,7 @@ foreign import onEvent """
   } """ :: forall a e e'. String -> Socket -> (a -> Eff e Unit) -> Eff (ws :: WebSocket | e') Unit
 
 
-onMessage :: forall e e'. Socket -> (String -> Eff e Unit) -> Eff (ws :: WebSocket | e') Unit
+onMessage :: forall e e'. Socket -> (MessageEvent -> Eff e Unit) -> Eff (ws :: WebSocket | e') Unit
 onMessage = onEvent "message"
 
 
@@ -79,8 +115,8 @@ onError :: forall e e'. Socket -> (SocketError -> Eff e Unit) -> Eff (ws :: WebS
 onError = onEvent "error"
 
 
-onClose :: forall e e'. Socket -> (Unit -> Eff e Unit) -> Eff (ws :: WebSocket | e') Unit
-onClose = onEvent "close"
+onClose :: forall e e'. Socket -> Eff e Unit -> Eff (ws :: WebSocket | e') Unit
+onClose socket event = onEvent "close" socket \_ -> event
 
 
 foreign import send """
