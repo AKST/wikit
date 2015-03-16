@@ -1,35 +1,40 @@
 module Network.WebSocketAPI where
 
 
-import Data.Maybe
+import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject, printJson)
+import Data.Argonaut.Encode (EncodeJson, encodeJson)
+import Data.Argonaut.Decode (DecodeJson, decodeJson)
+import Data.Maybe (Maybe(..))
 
 
-type WikiRequest  = { name :: String, continue :: Maybe Number } 
-type WikiResponse = { status :: String } 
+newtype WikiRequest  = WikiRequest { name :: String, continue :: Maybe Number } 
+newtype WikiResponse = WikiResponse { status :: String } 
 
 
-foreign import serialise """
-  function serialise(request) {
-    if (request.continue instanceof PS.Data_Maybe.Just) {
-      return JSON.stringify({ 
-        name: request.name,
-        continue: request.continue.value0 
-      });
-    }
-    else {
-      return JSON.stringify({ 
-        name: request.name
-      });
-    }
-  }
-  """ :: WikiRequest -> String
+instance decodeWikiRequest :: DecodeJson WikiRequest where 
+  decodeJson json = do
+    obj <- decodeJson json
+    name <- obj .? "name"
+    cont <- obj .? "continue"
+    pure (WikiRequest { name: name, continue: cont } )
+
+instance decodeWikiResponse :: DecodeJson WikiResponse where
+  decodeJson json = do
+    object <- decodeJson json
+    status <- object .? "status"
+    pure (WikiResponse { status: status } )
 
 
-foreign import deserialise """
-  function deserialise(response) {
-    return JSON.parse(response);
-  }
-  """ :: String -> WikiResponse
+instance encodeWikiRequest :: EncodeJson WikiRequest where
+  encodeJson (WikiRequest obj) 
+    =  "name"     := obj.name
+    ~> "continue" := obj.continue
+    ~> jsonEmptyObject
+
+instance encodeWikiResponse :: EncodeJson WikiResponse where
+  encodeJson (WikiResponse obj) 
+    =  "status" := obj.status
+    ~> jsonEmptyObject
 
 
 

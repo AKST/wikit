@@ -1,5 +1,7 @@
 module Components.App (app, AppPs(), AppSt(), AppEv(..), AppEf(..)) where
 
+import Data.Argonaut (printJson)
+import Data.Argonaut.Encode (EncodeJson, encodeJson)
 import Data.Maybe
 
 import Debug.Trace (trace, Trace(..))
@@ -35,7 +37,7 @@ app = T.simpleSpec {} performAction render where
   performAction _ AppDoNothing = return unit 
   performAction { socket: ws } (AppSearch articleName) = T.sync do
       trace ("requesting revisions for " ++ articleName)
-      ws `WS.send` WS.serialise { name: articleName, continue: Nothing } 
+      ws `WS.send` (printJson $ encodeJson (WS.WikiRequest { name: articleName, continue: Nothing })) 
 
 
   handleInput :: T.KeyboardEvent -> AppEv

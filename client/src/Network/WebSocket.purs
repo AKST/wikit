@@ -8,9 +8,7 @@ module Network.WebSocket (
 
   onMessage,
   onError,
-  onClose,
-
-  messageData
+  onClose
 
 ) where
 
@@ -19,43 +17,26 @@ import Control.Monad.Eff.Class
 
 foreign import data WebSocket :: !
 foreign import data Socket :: *
-foreign import data SocketError :: *
-foreign import data MessageEvent :: *
+
+newtype SocketError = SocketError {}
+newtype MessageEvent = MessageEvent { data :: String } 
 
 
 {------------------------------------------------------
   MessageEvent
 ------------------------------------------------------}
 
-foreign import messageData """
-  function messageData(messageEvent) {
-    return messageEvent.data;
-  }
-  """ :: MessageEvent -> String
-
-instance messageEvent :: Show MessageEvent where
-  show = showMessageEvent
-
-foreign import showMessageEvent """
-  function showMessageEvent(messageEvent) { 
+foreign import showObj """
+  function showObj(messageEvent) { 
     return messageEvent.toString(); 
   }
-  """ :: MessageEvent -> String
+  """ :: forall a. a -> String
 
-
-{------------------------------------------------------
-  SocketError
-------------------------------------------------------}
-
+instance messageEvent :: Show MessageEvent where
+  show (MessageEvent evt) = showObj evt
 
 instance socketErrorShow :: Show SocketError where
-  show = showError
-
-foreign import showError """
-  function showError(error) { 
-    return error.toString(); 
-  }
-  """ :: SocketError -> String
+  show (SocketError error) = showObj error
 
 
 {------------------------------------------------------

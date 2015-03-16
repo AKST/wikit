@@ -21,6 +21,7 @@
     "purescript-thermite": "~0.5.2",
     "purescript-refs": "~0.1.2",
     "purescript-client-routing": "~0.2.0",
-    "rsvp": "~3.0.17"
+    "rsvp": "~3.0.17",
+    "purescript-argonaut": "~0.4.0"
   }
 }
