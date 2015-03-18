@@ -11,6 +11,7 @@ import Control.Applicative
 
 import Connection
 import Wikipedia
+import Common
 import API
 
 
@@ -27,14 +28,14 @@ main = initWS "0.0.0.0" 8080 $
 
         -- get the first revisions of an article 
         WStart name -> do
-          revisions <- getRevisions (wikiQuery { article = name }) 
+          (RevisionRes revisions) <- getRevisions 
+            (revisionQuery { article = name }) 
           yieldResponse (WRevisions revisions)
-
+          
         -- get the rest of the article revisions
         WCont name cont -> do
-          revisions <- getRevisions (wikiQuery { 
-            article    = name, 
-            rvcontinue = Just cont }) 
+          (RevisionRes revisions) <- getRevisions 
+            (revisionQuery { article = name, rvcontinue = Just cont }) 
           yieldResponse (WRevisions revisions)
 
 

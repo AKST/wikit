@@ -23,7 +23,7 @@ newtype MessageEvent = MessageEvent { data :: String }
 
 
 {------------------------------------------------------
-  MessageEvent
+Typeclass instances
 ------------------------------------------------------}
 
 foreign import showObj """

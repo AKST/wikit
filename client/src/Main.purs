@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Maybe
 
 import Debug.Trace (trace, Trace(..))
 
@@ -12,7 +13,8 @@ import qualified Control.Monad.JQuery as J
 
 import qualified Thermite as T
 
-import Components.App
+import Components.Article 
+import Components.Query 
 
 import DOM
 
@@ -34,20 +36,23 @@ main = do
       trace "socket has been closed"
 
     routerConfig socket = do
-      let mainApp = T.createClass app
-          mainPps = { socket: socket }
+      let queryClass   = T.createClass queryPage
+          articleClass = T.createClass articlePage
 
       articleName <- param any
       arciclePreF <- param (exact "article")
 
       route0 empty do
         liftEff (trace "hello world")
-        onReady mainApp mainPps
+        onReady queryClass { 
+          socket: socket, 
+          message: Nothing 
+        }
 
       route1 (arciclePreF -/ articleName +/ empty) $ \name -> do
         void $ liftEff do
           trace ("now viewing " ++ name)
-          onReady mainApp mainPps
+          onReady articleClass {}
 
       notFound do
         liftEff (trace "on found, redirecting to index")

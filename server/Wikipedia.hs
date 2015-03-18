@@ -36,7 +36,7 @@ data RevisionQuery = RevisionQuery {
 }
 
 
-wikiQuery = RevisionQuery {
+revisionQuery = RevisionQuery {
   rvlimit    = 15,
   rvcontinue = Nothing,
   article    = ""
@@ -56,14 +56,14 @@ wikipediaURI = URI {
 }
 
 
-getRevisions :: RevisionQuery -> Conn ArticleRevisions   
+getRevisions :: RevisionQuery -> Conn RevisionRes
 getRevisions query = do
 
   log INFO $ case rvcontinue query of
     Nothing -> "fetching the revisions for \"" ++ T.unpack (article query) ++ "\""
     Just ct -> "continuing the revisions for \"" ++ T.unpack (article query) ++ "\", from " ++ show ct
 
-  result <- get (wikipediaURI { uriQuery = wikiQuery })
+  result <- get (wikipediaURI { uriQuery = revisionQuery })
 
   unless (isOk result) $
     throwError (WikiResponseNotOk result) 
@@ -76,7 +76,7 @@ getRevisions query = do
     isOk (Response { rspCode = (2, _, _)}) = True
     isOk _________________________________ = False
 
-    wikiQuery = baseQuery ++ case rvcontinue query of
+    revisionQuery = baseQuery ++ case rvcontinue query of
       Just continue -> "?rvcontinue=" ++ show continue
       Nothing       -> ""
 

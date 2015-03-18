@@ -1,4 +1,12 @@
-module Components.App (app, AppPs(), AppSt(), AppEv(..), AppEf(..)) where
+module Components.Query (
+  
+  queryPage, 
+  QueryPs(), 
+  QuerySt(), 
+  QueryEv(), 
+  QueryEf(..)
+
+) where
 
 import Data.Argonaut (printJson)
 import Data.Argonaut.Encode (EncodeJson, encodeJson)
@@ -23,31 +31,37 @@ import qualified Thermite.Types as T
 
 import Components.Common
 
-
-data AppEv = AppDoNothing | AppSearch String
-type AppPs = { socket :: WS.Socket }
-type AppSt = {}
-type AppEf e = (trace :: Trace, routing :: R.Routing, ws :: WS.WebSocket | e)
+import Model.Message
+import Model.Status
 
 
-app :: forall e. T.Spec (T.Action (AppEf e) AppSt) AppSt AppPs AppEv
-app = T.simpleSpec {} performAction render where
+data QueryEv = DoNothing | Search String
+type QueryPs = { socket :: WS.Socket, message :: Maybe Message }
+type QuerySt = {}
+type QueryEf e = (trace :: Trace, routing :: R.Routing, ws :: WS.WebSocket | e)
 
-  performAction :: T.PerformAction AppPs AppEv (T.Action (AppEf e) AppSt)
-  performAction _ AppDoNothing = return unit 
-  performAction { socket: ws } (AppSearch articleName) = T.sync do
+
+--
+-- TODO rename as query
+--
+queryPage :: forall e. T.Spec (T.Action (QueryEf e) QuerySt) QuerySt QueryPs QueryEv
+queryPage = T.simpleSpec {} performAction render where
+
+  performAction :: T.PerformAction QueryPs QueryEv (T.Action (QueryEf e) QuerySt)
+  performAction _ DoNothing = return unit 
+  performAction { socket: ws } (Search articleName) = T.sync do
       trace ("requesting revisions for " ++ articleName)
       ws `WS.send` (printJson $ encodeJson (WS.WikiRequest { name: articleName, continue: Nothing })) 
 
 
-  handleInput :: T.KeyboardEvent -> AppEv
+  handleInput :: T.KeyboardEvent -> QueryEv
   handleInput keyevent = case currentK of
-    "Enter" -> AppSearch (getValue keyevent)
-    _       -> AppDoNothing
+    "Enter" -> Search (getValue keyevent)
+    _       -> DoNothing
     where currentK = keyCode keyevent
           currentT = getValue keyevent
 
-  render :: T.Render AppSt AppPs AppEv
+  render :: T.Render QuerySt QueryPs QueryEv
   render ctx _ _ = T.div [A._id "app", A.className "container"] [
     T.h1' [T.text "Hello World"],
     T.p'  [T.text "Welcome to my home page (-:"],

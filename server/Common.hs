@@ -25,7 +25,16 @@ data ConnError
   | CouldNotParseArticle ByteString
   deriving Show
 
+data ArticleExists = ArticleExists Text Bool
 
+--
+-- Revision Response from wikipedia
+--
+newtype RevisionRes = RevisionRes ArticleRevisions 
+
+--
+-- Article Revision 
+--
 data ArticleRevisions = ArticleRevisions {
   revisionContinue :: Word32,
   title  :: Text,
@@ -40,12 +49,16 @@ data Revision = Revision {
   revisionBody :: Text
 }
 
-instance FromJSON ArticleRevisions where
-  parseJSON (Object v) =
-    ArticleRevisions <$> ((v .: "query-continue") >>= (.: "revisions") >>= (.: "rvcontinue")) 
-                     <*> fromArticle "title"
-                     <*> fromArticle "pageid"
-                     <*> fromArticle "revisions"
+instance FromJSON RevisionRes where
+  parseJSON (Object v) = do
+    revisions <- ArticleRevisions 
+      <$> ((v .: "query-continue") 
+         >>= (.: "revisions") 
+         >>= (.: "rvcontinue")) 
+      <*> fromArticle "title"
+      <*> fromArticle "pageid"
+      <*> fromArticle "revisions"
+    return (RevisionRes revisions)
 
     where fromArticle key = do
             articles <- (v .: "query") >>= (.: "pages")
@@ -71,6 +84,13 @@ instance ToJSON ArticleRevisions where
       "title"  .= t,
       "pageId" .= id,
       "pages"  .= ps
+    ]
+
+instance ToJSON ArticleExists where
+  toJSON (ArticleExists name exists) =
+    object [
+      "name"   .= name,
+      "exists" .= exists
     ]
     
 instance ToJSON Revision where
