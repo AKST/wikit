@@ -56,26 +56,37 @@ wikipediaURI = URI {
 }
 
 
+articleExists :: Text -> Conn ExistsRes
+articleExists name = do 
+  log INFO $ "checking if the article for\"" ++ T.unpack name ++ "\" exists"
+  result <- get (wikipediaURI { uriQuery = existsURL })
+  unless (isOk result) $
+    throwError (WikiResponseNotOk result)
+  case decode (rspBody result) of
+    Nothing -> throwError (CouldNotParseArticle (rspBody result))
+    Just re -> return re   
+
+  where
+    
+    existsURL = "?action=query"
+             ++ "&titles=" ++ (urlEncode (T.unpack name))
+             ++ "&format=json"
+
+
+
 getRevisions :: RevisionQuery -> Conn RevisionRes
 getRevisions query = do
-
   log INFO $ case rvcontinue query of
     Nothing -> "fetching the revisions for \"" ++ T.unpack (article query) ++ "\""
     Just ct -> "continuing the revisions for \"" ++ T.unpack (article query) ++ "\", from " ++ show ct
-
   result <- get (wikipediaURI { uriQuery = revisionQuery })
-
   unless (isOk result) $
-    throwError (WikiResponseNotOk result) 
-
+    throwError (WikiResponseNotOk result)
   case decode (rspBody result) of
     Nothing      -> throwError (CouldNotParseArticle (rspBody result))
     Just article -> return article     
 
   where
-    isOk (Response { rspCode = (2, _, _)}) = True
-    isOk _________________________________ = False
-
     revisionQuery = baseQuery ++ case rvcontinue query of
       Just continue -> "?rvcontinue=" ++ show continue
       Nothing       -> ""
@@ -87,6 +98,8 @@ getRevisions query = do
              ++ "&rvlimit=" ++ show (rvlimit query)
              ++ "&format=json"
 
+isOk (Response { rspCode = (2, _, _)}) = True
+isOk _________________________________ = False
 
 -- http://en.wikipedia.org/w/api.php
 --   ?action=query

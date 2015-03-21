@@ -1,3 +1,4 @@
+WATCH=find . -name '*.hs' | entr
 GULP=PATH=$$PATH:~/.bins gulp --require=LiveScript
 
 build: build-server build-client
@@ -10,6 +11,9 @@ build-server:
 
 watch-client: 
 	${GULP} watch
+
+watch-server:
+	${WATCH} make build-server serve-socket
 	
 serve-client:
 	ruby -run -e httpd ./public -p3000

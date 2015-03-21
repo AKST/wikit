@@ -26,6 +26,10 @@ main = initWS "0.0.0.0" 8080 $
       --
       case request of
 
+        WCheck name -> do
+          (ExistsRes exists) <- articleExists name 
+          yieldResponse (WExists exists)
+
         -- get the first revisions of an article 
         WStart name -> do
           (RevisionRes revisions) <- getRevisions 

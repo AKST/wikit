@@ -13,19 +13,22 @@ import Data.Text (Text)
 import Data.ByteString.Lazy
 
 import Control.Monad
+import Control.Applicative
 
 import Common
 
 -- # Format of incoming messages
 
 data WikiTReq 
-  = WStart Text
+  = WCheck Text
+  | WStart Text
   | WCont Text Word32
 
 -- # Responses
 
 data WikiTRes 
   = WEcho WikiTReq
+  | WExists ArticleExists
   | WRevisions ArticleRevisions
 
 data WikiTErr 
@@ -36,11 +39,14 @@ data WikiTErr
 
 instance FromJSON WikiTReq where
   parseJSON (Object v) = do 
-    name <- v .:  "name"
-    cont <- v .:? "continue"
-    return $ case cont of
-      Just c -> WCont name c
-      _____  -> WStart name
+    rType <- v .: "type"
+    name  <- v .: "name"
+    case (rType :: Maybe Text) of
+      Just "check"    -> pure (WCheck name)
+      Just "start"    -> pure (WStart name)
+      Just "continue" -> do
+        continue <- v .: "continue"
+        pure (WCont name continue)
 
   parseJSON _ = mzero
                       
@@ -62,10 +68,12 @@ instance ToJSON WikiTRes where
 
       body = case res of 
         WEcho r      -> toJSON r
+        WExists r    -> toJSON r
         WRevisions r -> toJSON r
 
       bodyType = case res of
         WEcho _      -> "echo" :: Text
+        WExists _    -> "existential" 
         WRevisions _ -> "revisions" 
 
       

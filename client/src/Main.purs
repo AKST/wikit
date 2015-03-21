@@ -24,6 +24,7 @@ main = do
   socket `WS.onMessage` messageListener 
   socket `WS.onError` errorListener
   socket `WS.onClose` closeListener
+
   runRouter (routerConfig socket) where
 
     messageListener message = do

@@ -1,6 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Common where
+module Common (
+  ConnError(FailedConnection, WikiResponseNotOk, CouldNotParseArticle),
+  ArticleExists(ArticleExists),
+  RevisionRes(RevisionRes),
+  ExistsRes(ExistsRes),
+
+  ArticleRevisions(ArticleRevisions),
+  Revision(Revision)
+) where
 
 
 import qualified Network.HTTP   as HTTP
@@ -25,12 +33,16 @@ data ConnError
   | CouldNotParseArticle ByteString
   deriving Show
 
+--
+-- Article Exists
+--
 data ArticleExists = ArticleExists Text Bool
 
 --
 -- Revision Response from wikipedia
 --
 newtype RevisionRes = RevisionRes ArticleRevisions 
+newtype ExistsRes = ExistsRes ArticleExists 
 
 --
 -- Article Revision 
@@ -51,22 +63,28 @@ data Revision = Revision {
 
 instance FromJSON RevisionRes where
   parseJSON (Object v) = do
+    article <- getArticle v
     revisions <- ArticleRevisions 
       <$> ((v .: "query-continue") 
          >>= (.: "revisions") 
          >>= (.: "rvcontinue")) 
-      <*> fromArticle "title"
-      <*> fromArticle "pageid"
-      <*> fromArticle "revisions"
+      <*> article .: "title"
+      <*> article .: "pageid"
+      <*> article .: "revisions"
     return (RevisionRes revisions)
-
-    where fromArticle key = do
-            articles <- (v .: "query") >>= (.: "pages")
-            case HM.elems (articles :: HM.HashMap Text Value) of 
-              Object v:_ -> v .: key
-              _   -> mzero
-
   parseJSON _ = mzero
+
+instance FromJSON ExistsRes where
+  parseJSON (Object v) = do
+    article <- getArticle v
+    missing <- article .:? "missing"
+    title   <- article .: "title"
+    return $ ExistsRes $ case (missing :: Maybe Text) of
+      Just _  -> ArticleExists title False
+      Nothing -> ArticleExists title True
+  parseJSON _ = mzero
+                      
+
     
 instance FromJSON Revision where
   parseJSON (Object v) =
@@ -75,6 +93,19 @@ instance FromJSON Revision where
              <*> v .: "contentmodel"
              <*> v .: "*"
   parseJSON _ = mzero
+
+
+getArticle v = do
+  articles <- (v .: "query") >>= (.: "pages")
+  case HM.elems (articles :: HM.HashMap Text Value) of 
+    Object v:_ -> return v
+    _          -> mzero
+
+fromArticle v key = do
+  articles <- (v .: "query") >>= (.: "pages")
+  case HM.elems (articles :: HM.HashMap Text Value) of 
+    Object v:_ -> v .: key
+    _          -> mzero
 
 
 instance ToJSON ArticleRevisions where
