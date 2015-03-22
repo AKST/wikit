@@ -2,6 +2,7 @@
 
 module Common (
   ConnError(FailedConnection, WikiResponseNotOk, CouldNotParseArticle),
+  FatalError(UnknownFatalError, CouldntParseRequest),
   ArticleExists(ArticleExists),
   RevisionRes(RevisionRes),
   ExistsRes(ExistsRes),
@@ -32,6 +33,10 @@ data ConnError
   | WikiResponseNotOk (HTTP.Response ByteString)
   | CouldNotParseArticle ByteString
   deriving Show
+
+data FatalError
+  = UnknownFatalError
+  | CouldntParseRequest
 
 --
 -- Article Exists
@@ -133,4 +138,22 @@ instance ToJSON Revision where
       "revisionBody" .= rb
     ]
 
+instance ToJSON ConnError where
+  toJSON error = object ["message" .= message] where
+
+    message :: Text
+    message = case error of
+      _ -> "gateway error" 
+
+instance ToJSON FatalError where
+  toJSON error = object [
+    "status" .= ("bad request" :: Text),
+    "body" .= ["message" .= message]] 
+    
+    where
+
+      message :: Text
+      message = case error of
+        UnknownFatalError   -> "Unhandled error :( sorry"
+        CouldntParseRequest -> "Can you even json?"
 

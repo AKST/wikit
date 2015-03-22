@@ -14,6 +14,7 @@ module Connection (
   yieldResponse,
   dispatchVoid,
   dispatch,
+  closeConnection,
   get,
   log
 
@@ -80,18 +81,22 @@ runConnection options conn = forever (withOptions options conn)
 awaitData :: WS.WebSocketsData a => Conn a
 awaitData = do
   socketConnection <- asks connection
-  liftIO $ WS.receiveData socketConnection
-
+  liftIO (WS.receiveData socketConnection)
 
 yieldData :: WS.WebSocketsData a => a -> Conn ()
 yieldData response = do
   socketConnection <- asks connection
-  liftIO $ WS.sendTextData socketConnection response
+  liftIO (WS.sendTextData socketConnection response)
 
+closeConnection :: FatalError -> Conn ()
+closeConnection reason = do
+  socketConnection <- asks connection
+  liftIO (WS.sendClose socketConnection (encode reason)) 
 
 yieldResponse :: ToJSON a => a -> Conn ()
 yieldResponse response = yieldData (encode response)
 
+dispatchVoid :: Conn a -> Conn ()
 dispatchVoid = void . dispatch
 
 dispatch :: Conn a -> Conn ThreadId
@@ -103,8 +108,9 @@ dispatch task = ask >>= \options ->
   --
   liftIO . forkIO . void . withOptions options $
     catchError (void task) $ \result -> do
-      yieldResponse (WInternalError result)
       log L.ERROR ("An error occured,\n  " ++ show result)
+      closeConnection UnknownFatalError
+
 
 
 {-- UTILITY --}

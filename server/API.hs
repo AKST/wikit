@@ -19,6 +19,8 @@ import Common
 
 -- # Format of incoming messages
 
+data Request = Request WikiTReq Int
+
 data WikiTReq 
   = WCheck Text
   | WStart Text
@@ -26,16 +28,21 @@ data WikiTReq
 
 -- # Responses
 
+data Response 
+  = Response WikiTRes Int
+  | ErrorRes ConnError Int
+
 data WikiTRes 
   = WEcho WikiTReq
   | WExists ArticleExists
   | WRevisions ArticleRevisions
 
-data WikiTErr 
-  = WParseError
-  | WInternalError ConnError
-
 -- # Serialisation
+
+instance FromJSON Request where
+  parseJSON (Object v) = do
+    Request <$> parseJSON (Object v)
+            <*> v .: "timestamp"
 
 instance FromJSON WikiTReq where
   parseJSON (Object v) = do 
@@ -52,39 +59,43 @@ instance FromJSON WikiTReq where
                       
 instance ToJSON WikiTReq where
   toJSON (WStart name) = 
-    object ["name" .= name] 
+    object [
+      "type" .= ("start" :: Text), 
+      "name" .= name
+    ] 
+  toJSON (WCheck name) = 
+    object [
+      "type" .= ("check" :: Text), 
+      "name" .= name
+    ]
   toJSON (WCont name c) = 
-    object ["name" .= name, "continue" .= c]
+    object [
+      "type" .= ("continue" :: Text), 
+      "name" .= name, 
+      "continue" .= c
+    ]
 
+instance ToJSON Response where
+  toJSON (Response res id) = object [
+    "timestamp" .= id,  
+    "status"    .= ("ok" :: Text),
+    "body"      .= toJSON res]
+  toJSON (ErrorRes _ id) = object [
+    "timestamp" .= id,  
+    "status"    .= ("errro" :: Text),
+    "body"      .= [
+      "message" .= ("internal server error" :: Text)]]   
 
 instance ToJSON WikiTRes where 
-  toJSON res = object [
-      "status" .= status, 
-      "body"   .= object [
-        "contents" .= body,
-        "type"     .= bodyType]] 
-    where
-      status = "ok" :: Text
+  toJSON res = object ["contents" .= body, "type" .= bodyType] where
 
-      body = case res of 
-        WEcho r      -> toJSON r
-        WExists r    -> toJSON r
-        WRevisions r -> toJSON r
+    body = case res of 
+      WEcho r      -> toJSON r
+      WExists r    -> toJSON r
+      WRevisions r -> toJSON r
 
-      bodyType = case res of
-        WEcho _      -> "echo" :: Text
-        WExists _    -> "existential" 
-        WRevisions _ -> "revisions" 
-
-      
-
-instance ToJSON WikiTErr where
-  toJSON err = object ["status" .= status, "message" .= body] where  
-
-    status = "error" :: Text
-    
-    body = case err of
-      WParseError      -> "could not parse request" :: Text 
-      WInternalError _ -> "internal error occured" 
-
+    bodyType = case res of
+      WEcho _      -> "echo" :: Text
+      WExists _    -> "existential" 
+      WRevisions _ -> "revisions" 
 

@@ -13,7 +13,7 @@ watch-client:
 	${GULP} watch
 
 watch-server:
-	${WATCH} make build-server serve-socket
+	${WATCH} make build-server
 	
 serve-client:
 	ruby -run -e httpd ./public -p3000
