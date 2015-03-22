@@ -34,14 +34,12 @@ main = do
       arciclePreF <- param (exact "article")
 
       route0 empty do
-        onReady queryClass { 
-          store: store, 
-          message: Nothing 
-        }
+        trace ("Welcome to WikiT")
+        onReady queryClass { store: store }
 
       route1 (arciclePreF -/ articleName +/ empty) $ \name -> do
         void $ liftEff do
-          trace ("now viewing " ++ name)
+          trace ("now viewing revisions for \"" ++ name ++ "\"")
           onReady articleClass { store: store, article: name }
 
       notFound do

@@ -30,8 +30,13 @@ ps-source =
   * './bower_components/purescript-*/src/**/*.purs.hs' 
   * client-src = './client/src/**/*.purs'
 
+gulp.task \js <[js-libs purescript]> ->
+  gulp.src temp-js
+    .pipe concat \app.js
+    .pipe gulp.dest 'public/scripts'
 
-gulp.task \purescript !->
+
+gulp.task \purescript ->
   gulp.src ps-source
     .pipe purescript.psc do
       output: \compiled-purescript.js
@@ -41,30 +46,23 @@ gulp.task \purescript !->
     .pipe gulp.dest \temp
 
 
-gulp.task \js-libs !->
+gulp.task \js-libs ->
   gulp.src js-libs
     .pipe concat \jslibs.js
     .pipe gulp.dest \temp
 
 
-gulp.task \js <[purescript js-libs]> !->
-  gulp.src temp-js
-    .pipe concat \app.js
-    .pipe gulp.dest 'public/scripts'
-
-
-gulp.task \scss !->
+gulp.task \scss ->
   gulp.src './client/style/app.scss'
     .pipe sass!
     .pipe gulp.dest './public/style'
 
-
-gulp.task \html !->
+gulp.task \html ->
   gulp.src html-source
     .pipe gulp.dest 'public/.'
 
 
-gulp.task \clean !->
+gulp.task \clean ->
   gulp.src <[temp public]> { read: false }
     .pipe clean!
 

@@ -39,7 +39,7 @@ import Model.API
 
 
 data QueryEv = DoNothing | Search String
-type QueryPs = { store :: MS.MessageStore, message :: Maybe Message }
+type QueryPs = { store :: MS.MessageStore }
 type QuerySt = {}
 type QueryEf e = (trace :: Trace, routing :: R.Routing, ws :: WS.WebSocket | e)
 
