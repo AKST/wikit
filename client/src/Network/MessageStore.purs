@@ -38,7 +38,12 @@ instance showFatalError :: Show FatalError where
 
 foreign import implShow """
   function implShow(obj) {
-    return JSON.stringify(obj);
+    if (typeof obj.toString !== 'undefined') {
+      return obj.toString();
+    }
+    else {
+      return JSON.stringify(obj);
+    }
   }""" :: forall a. a -> String
 
 {------------------------------------------------------
@@ -54,7 +59,9 @@ foreign import initStore """
           return window.MessageStore.create(
             url, 
             protocols, 
-            onFatalError
+            function (e) {
+              onFatalError(e)();
+            }
           );
         };
       };
@@ -86,6 +93,9 @@ foreign import sendImpl """
 send :: forall a b e e'. (DecodeJson a, EncodeJson b) 
      => MessageStore -> (a -> Eff e Unit) -> b -> Eff (ws :: WebSocket | e') Unit 
 
+--
+-- Todo make function handle an either
+--
 send store callback request = sendImpl store onResponse serialised where
 
   serialised = encodeJson request

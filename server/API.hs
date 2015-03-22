@@ -54,6 +54,7 @@ instance FromJSON WikiTReq where
       Just "continue" -> do
         continue <- v .: "continue"
         pure (WCont name continue)
+      _ -> mzero
 
   parseJSON _ = mzero
                       
@@ -96,6 +97,6 @@ instance ToJSON WikiTRes where
 
     bodyType = case res of
       WEcho _      -> "echo" :: Text
-      WExists _    -> "existential" 
+      WExists _    -> "check" 
       WRevisions _ -> "revisions" 
 

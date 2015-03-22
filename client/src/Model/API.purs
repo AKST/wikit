@@ -4,39 +4,67 @@ module Model.API where
 import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject, printJson)
 import Data.Argonaut.Encode (EncodeJson, encodeJson)
 import Data.Argonaut.Decode (DecodeJson, decodeJson)
+import Data.Either (Either(Left))
 import Data.Maybe (Maybe(..))
 
 
-newtype WikiRequest  = WikiRequest { name :: String, continue :: Maybe Number } 
-newtype WikiResponse = WikiResponse { status :: String } 
+
+data WikiResponse 
+  = WikiResponseR WikiResult
+  | WikiResponseE WikiError
+
+data WikiError 
+  = InternalError String
+
+data WikiResult 
+  = AArticleExist { name :: String, exists :: Boolean }
+  | ARevisions { name :: String }
+
+data WikiRequest  
+  = QArticleExists { name :: String } 
+  | QStartRevisions { name :: String } 
+  | QContinueRevisions { name :: String, continue :: Number } 
 
 
-instance decodeWikiRequest :: DecodeJson WikiRequest where 
-  decodeJson json = do
-    obj <- decodeJson json
-    name <- obj .? "name"
-    cont <- obj .? "continue"
-    pure (WikiRequest { name: name, continue: cont } )
 
 instance decodeWikiResponse :: DecodeJson WikiResponse where
   decodeJson json = do
     object <- decodeJson json
     status <- object .? "status"
-    pure (WikiResponse { status: status } )
+    body   <- object .? "body"
+    cont   <- body .? "contents"
+    case status of
+      "error" -> do
+        msg <- cont .? "message"
+        pure (WikiResponseE (InternalError msg))
+      "ok" -> do
+        kind <- body .? "type"
+        name <- cont .? "name"
+        result <- case kind of
+          "check" -> do
+            exists <- cont .? "exists"
+            pure (AArticleExist { name: name, exists: exists }) 
+          "revisions" -> do
+            pure (ARevisions { name: name })
+          _ ->
+            Left ("\"" ++ kind ++ "\" is not a valid kind")
+        pure (WikiResponseR result)
+      _ -> Left ("\"" ++ status ++ "\" is not a valid status")
 
 
 instance encodeWikiRequest :: EncodeJson WikiRequest where
-  encodeJson (WikiRequest obj) = 
-    let withName = "name" := obj.name 
-        withType = "type" := "check"
-    in case obj.continue of
-      Nothing   -> withName ~> withType ~> jsonEmptyObject
-      Just cont -> withName ~> withType ~> "continue" := cont ~> jsonEmptyObject
-
-
-instance encodeWikiResponse :: EncodeJson WikiResponse where
-  encodeJson (WikiResponse obj) 
-    =  "status" := obj.status
+  encodeJson (QArticleExists obj) 
+    =  "name" := obj.name 
+    ~> "type" := "check"
+    ~> jsonEmptyObject
+  encodeJson (QStartRevisions obj) 
+    =  "name" := obj.name 
+    ~> "type" := "start"
+    ~> jsonEmptyObject
+  encodeJson (QContinueRevisions obj) 
+    =  "name"     := obj.name 
+    ~> "continue" := obj.continue 
+    ~> "type"     := "continue"
     ~> jsonEmptyObject
 
 

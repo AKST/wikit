@@ -53,14 +53,24 @@ queryPage = T.simpleSpec {} performAction render where
   performAction :: T.PerformAction QueryPs QueryEv (T.Action (QueryEf e) QuerySt)
   performAction _ DoNothing = return unit 
   performAction { store: ms } (Search articleName) = T.sync do
-    trace ("checking the availablity of articles for " ++ articleName)
-    MS.send ms onResponse (WikiRequest { 
-      name: articleName, 
-      continue: Nothing
-    }) 
+    trace ("checking the availablity of articles for " ++ show articleName)
+    MS.send ms onResponse (QArticleExists { name: articleName })
 
-  onResponse (WikiResponse { status: s }) =
-    trace ("response was " ++ s) 
+  onResponse :: WikiResponse -> Eff _ Unit
+  onResponse respsonse = case respsonse of
+
+    WikiResponseR result -> case result of 
+      AArticleExist { name: n, exists: e } ->
+        if e then
+          trace (show n ++ " exists") 
+        else
+          trace (show n ++ " does not exist") 
+      _ ->
+        trace "for some reason the response was not an exists"
+
+    WikiResponseE error -> case error of
+      InternalError message ->
+        trace ("request failed because " ++ show message)
 
   handleInput :: T.KeyboardEvent -> QueryEv
   handleInput keyevent = case currentK of

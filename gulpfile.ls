@@ -19,16 +19,20 @@ temp-js =
 
 
 js-libs = 
+  * './client/src.js/**/*.js'
   * './bower_components/jquery/dist/jquery.js'
   * './bower_components/react/react.js'
   * './bower_components/rsvp/rsvp.js'
-  * './client/src.js/**/*.js'
+
 
 
 ps-source = 
+  * './client/src/**/*.purs'
   * './bower_components/purescript-*/src/**/*.purs' 
   * './bower_components/purescript-*/src/**/*.purs.hs' 
-  * client-src = './client/src/**/*.purs'
+
+
+client-src = [js-libs[0], ps-source[0]] 
 
 gulp.task \js <[js-libs purescript]> ->
   gulp.src temp-js

@@ -6,7 +6,7 @@
 (function (exporter) {
   var MessageStore;
 
-  function MessageStore(url, protocols, onFatalError) {
+  MessageStore = function (url, protocols, onFatalError) {
     var socket, self;
 
     self = this;
@@ -38,38 +38,34 @@
     //
     this.__socket_promise.then(function (socket) {
       socket.addEventListener("message", function (event) {
-        try {
-          var parsedData, timestamp, callback;
+        var parsedData, timestamp, callback;
 
-          parsedData = JSON.parse(event.data);
-          timestamp  = parsedData.timestamp;   
+        parsedData = JSON.parse(event.data);
+        timestamp  = parsedData.timestamp;   
 
-          //
-          // when no time stamp is present, this means
-          // there was an error where it was impossible
-          // to provide a timestamp, hence fatal.
-          //
-          if (typeof timestamp === 'undefined') {
-            onFatalError(parsedData);
-            return;
-          }
-
-          callback = self.__listeners[timestamp];
-          callback(parsedData);
-
-          //
-          // prevent GC loitering
-          //
-          delete self.__listeners[timestamp];
-        } catch (e) {
-          onFatalError(e);
+        //
+        // when no time stamp is present, this means
+        // there was an error where it was impossible
+        // to provide a timestamp, hence fatal.
+        //
+        if (typeof timestamp === 'undefined') {
+          onFatalError(parsedData);
+          return;
         }
+
+        callback = self.__listeners[timestamp];
+        callback(parsedData);
+
+        //
+        // prevent GC loitering
+        //
+        delete self.__listeners[timestamp];
       });
     });
-  }
+  };
 
-  MessageStore.create = function (socket) {
-    return new MessageStore(socket);
+  MessageStore.create = function (url, protocols, onFatalError) {
+    return new MessageStore(url, protocols, onFatalError);
   };
   
   MessageStore.prototype.send = function (request, callback) {
@@ -102,7 +98,6 @@
     deepcopy.timestamp = timestamp;
 
     this.__socket_promise.then(function (socket) {
-      console.debug(deepcopy, JSON.stringify(deepcopy));
       socket.send(JSON.stringify(deepcopy));
     });
   };
