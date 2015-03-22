@@ -1,4 +1,4 @@
-module Network.WebSocketAPI where
+module Model.API where
 
 
 import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject, printJson)

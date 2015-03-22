@@ -34,7 +34,6 @@ main = do
       arciclePreF <- param (exact "article")
 
       route0 empty do
-        liftEff (trace "hello world")
         onReady queryClass { 
           store: store, 
           message: Nothing 
@@ -43,7 +42,7 @@ main = do
       route1 (arciclePreF -/ articleName +/ empty) $ \name -> do
         void $ liftEff do
           trace ("now viewing " ++ name)
-          onReady articleClass {}
+          onReady articleClass { store: store, article: name }
 
       notFound do
         liftEff (trace "on found, redirecting to index")

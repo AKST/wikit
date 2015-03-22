@@ -15,7 +15,7 @@ import Debug.Trace (trace, Trace(..))
 
 import qualified Network.Routing.Client as R
 import qualified Network.WebSocket as WS
-import qualified Network.WebSocketAPI as WS
+import qualified Network.MessageStore as MS
 
 import qualified Thermite as T
 import qualified Thermite.Html as T
@@ -27,9 +27,11 @@ import qualified Thermite.Types as T
 
 import Components.Common
 
+import Model.API
+
 
 data ArticleEv = ArticleEv
-type ArticlePs = {}
+type ArticlePs = { store :: MS.MessageStore, article :: String }
 type ArticleSt = {}
 type ArticleEf e = (trace :: Trace, routing :: R.Routing, ws :: WS.WebSocket | e)
 

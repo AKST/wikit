@@ -20,7 +20,6 @@ import Control.Monad.Eff.Class
 
 import qualified Network.Routing.Client as R
 import qualified Network.WebSocket    as WS
-import qualified Network.WebSocketAPI as WS
 import qualified Network.MessageStore as MS
 
 import qualified Thermite as T
@@ -35,6 +34,8 @@ import Components.Common
 
 import Model.Message
 import Model.Status
+
+import Model.API
 
 
 data QueryEv = DoNothing | Search String
@@ -53,12 +54,12 @@ queryPage = T.simpleSpec {} performAction render where
   performAction _ DoNothing = return unit 
   performAction { store: ms } (Search articleName) = T.sync do
     trace ("checking the availablity of articles for " ++ articleName)
-    MS.send ms onResponse (WS.WikiRequest { 
+    MS.send ms onResponse (WikiRequest { 
       name: articleName, 
       continue: Nothing
     }) 
 
-  onResponse (WS.WikiResponse { status: s }) =
+  onResponse (WikiResponse { status: s }) =
     trace ("response was " ++ s) 
 
   handleInput :: T.KeyboardEvent -> QueryEv
