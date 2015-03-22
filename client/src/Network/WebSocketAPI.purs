@@ -26,10 +26,13 @@ instance decodeWikiResponse :: DecodeJson WikiResponse where
 
 
 instance encodeWikiRequest :: EncodeJson WikiRequest where
-  encodeJson (WikiRequest obj) 
-    =  "name"     := obj.name
-    ~> "continue" := obj.continue
-    ~> jsonEmptyObject
+  encodeJson (WikiRequest obj) = 
+    let withName = "name" := obj.name 
+        withType = "type" := "check"
+    in case obj.continue of
+      Nothing   -> withName ~> withType ~> jsonEmptyObject
+      Just cont -> withName ~> withType ~> "continue" := cont ~> jsonEmptyObject
+
 
 instance encodeWikiResponse :: EncodeJson WikiResponse where
   encodeJson (WikiResponse obj) 

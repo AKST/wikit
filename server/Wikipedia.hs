@@ -58,7 +58,7 @@ wikipediaURI = URI {
 
 articleExists :: Text -> Conn ExistsRes
 articleExists name = do 
-  log INFO $ "checking if the article for\"" ++ T.unpack name ++ "\" exists"
+  log INFO $ "checking if an article for \"" ++ T.unpack name ++ "\" exists"
   result <- get (wikipediaURI { uriQuery = existsURL })
   unless (isOk result) $
     throwError (WikiResponseNotOk result)

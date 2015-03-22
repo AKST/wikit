@@ -5,7 +5,7 @@ import Data.Maybe
 import Debug.Trace (trace, Trace(..))
 
 import Network.Routing.Client
-import qualified Network.WebSocket as WS
+import qualified Network.MessageStore as MS
 
 import Control.Monad.Eff
 import Control.Monad.Eff.Class
@@ -20,23 +20,13 @@ import DOM
 
 
 main = do
-  socket <- WS.open "ws://0.0.0.0:8080" []
-  socket `WS.onMessage` messageListener 
-  socket `WS.onError` errorListener
-  socket `WS.onClose` closeListener
+  store <- MS.initStore "ws://0.0.0.0:8080" [] onCrash
+  runRouter (routerConfig store) where
 
-  runRouter (routerConfig socket) where
+    onCrash message = do
+      trace ("store has crashed " ++ show message)
 
-    messageListener message = do
-      trace (show message)
-
-    errorListener error = do
-      trace (show error)
-
-    closeListener = do
-      trace "socket has been closed"
-
-    routerConfig socket = do
+    routerConfig store = do
       let queryClass   = T.createClass queryPage
           articleClass = T.createClass articlePage
 
@@ -46,7 +36,7 @@ main = do
       route0 empty do
         liftEff (trace "hello world")
         onReady queryClass { 
-          socket: socket, 
+          store: store, 
           message: Nothing 
         }
 

@@ -11,6 +11,7 @@ module Components.Query (
 import Data.Argonaut (printJson)
 import Data.Argonaut.Encode (EncodeJson, encodeJson)
 import Data.Maybe
+import Data.Date
 
 import Debug.Trace (trace, Trace(..))
 
@@ -18,8 +19,9 @@ import Control.Monad.Eff
 import Control.Monad.Eff.Class
 
 import qualified Network.Routing.Client as R
-import qualified Network.WebSocket as WS
+import qualified Network.WebSocket    as WS
 import qualified Network.WebSocketAPI as WS
+import qualified Network.MessageStore as MS
 
 import qualified Thermite as T
 import qualified Thermite.Html as T
@@ -36,7 +38,7 @@ import Model.Status
 
 
 data QueryEv = DoNothing | Search String
-type QueryPs = { socket :: WS.Socket, message :: Maybe Message }
+type QueryPs = { store :: MS.MessageStore, message :: Maybe Message }
 type QuerySt = {}
 type QueryEf e = (trace :: Trace, routing :: R.Routing, ws :: WS.WebSocket | e)
 
@@ -49,10 +51,15 @@ queryPage = T.simpleSpec {} performAction render where
 
   performAction :: T.PerformAction QueryPs QueryEv (T.Action (QueryEf e) QuerySt)
   performAction _ DoNothing = return unit 
-  performAction { socket: ws } (Search articleName) = T.sync do
-      trace ("requesting revisions for " ++ articleName)
-      ws `WS.send` (printJson $ encodeJson (WS.WikiRequest { name: articleName, continue: Nothing })) 
+  performAction { store: ms } (Search articleName) = T.sync do
+    trace ("checking the availablity of articles for " ++ articleName)
+    MS.send ms onResponse (WS.WikiRequest { 
+      name: articleName, 
+      continue: Nothing
+    }) 
 
+  onResponse (WS.WikiResponse { status: s }) =
+    trace ("response was " ++ s) 
 
   handleInput :: T.KeyboardEvent -> QueryEv
   handleInput keyevent = case currentK of

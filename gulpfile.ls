@@ -22,6 +22,7 @@ js-libs =
   * './bower_components/jquery/dist/jquery.js'
   * './bower_components/react/react.js'
   * './bower_components/rsvp/rsvp.js'
+  * './client/src.js/**/*.js'
 
 
 ps-source = 
