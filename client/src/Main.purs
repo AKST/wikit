@@ -12,6 +12,7 @@ import Control.Monad.Eff.Class
 import qualified Control.Monad.JQuery as J
 
 import qualified Thermite as T
+import qualified Thermite.Types as T
 
 import Components.Article 
 import Components.Query 
@@ -34,19 +35,22 @@ main = do
       arciclePreF <- param (exact "article")
 
       route0 empty do
-        trace ("Welcome to WikiT")
-        onReady queryClass { store: store }
+        setter <- getSetRoute
+        liftEff do
+          trace ("Welcome to WikiT")
+          onReady queryClass { store: store, setRoute: setter }
 
       route1 (arciclePreF -/ articleName +/ empty) $ \name -> do
-        void $ liftEff do
+        liftEff do
           trace ("now viewing revisions for \"" ++ name ++ "\"")
           onReady articleClass { store: store, article: name }
 
-      notFound do
-        liftEff (trace "on found, redirecting to index")
-        setRoute "/"
+      --notFound do
+      --  liftEff (trace "on found, redirecting to index")
+      --  setRoute "/"
 
 
-onReady component props = J.ready (T.render component props)
+onReady :: forall props eff. T.ComponentClass props eff -> props -> Eff (dom :: DOM | eff) Unit 
+onReady component props = void (J.ready (T.render component props))
 
 

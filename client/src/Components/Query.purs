@@ -1,9 +1,9 @@
 module Components.Query (
   
   queryPage, 
-  QueryPs(), 
   QuerySt(), 
   QueryEv(), 
+  QueryPs(..), 
   QueryEf(..)
 
 ) where
@@ -39,50 +39,52 @@ import Model.API
 
 
 data QueryEv = DoNothing | Search String
-type QueryPs = { store :: MS.MessageStore }
-type QuerySt = {}
+type QuerySt = { message :: Maybe String }
+type QueryPs e = { store :: MS.MessageStore, setRoute :: R.SetRoute e }
 type QueryEf e = (trace :: Trace, routing :: R.Routing, ws :: WS.WebSocket | e)
 
 
 --
 -- TODO rename as query
 --
-queryPage :: forall e. T.Spec (T.Action (QueryEf e) QuerySt) QuerySt QueryPs QueryEv
-queryPage = T.simpleSpec {} performAction render where
+queryPage = T.simpleSpec initialState performAction render where
 
-  performAction :: T.PerformAction QueryPs QueryEv (T.Action (QueryEf e) QuerySt)
+
+  initialState = { message: Nothing }
+
+
   performAction _ DoNothing = return unit 
-  performAction { store: ms } (Search articleName) = T.sync do
+  performAction props (Search articleName) = T.sync do
     trace ("checking the availablity of articles for " ++ show articleName)
-    MS.send ms onResponse (QArticleExists { name: articleName })
+    MS.send props.store 
+      (onResponse props.setRoute) 
+      (QArticleExists { name: articleName })
 
-  onResponse :: WikiResponse -> Eff _ Unit
-  onResponse respsonse = case respsonse of
 
+  onResponse set respsonse = case respsonse of
     WikiResponseR result -> case result of 
       AArticleExist { name: n, exists: e } ->
-        if e then
-          trace (show n ++ " exists") 
+        if e then do
+          trace (show n ++ " exists, redirecting") 
+          set ("article/" ++ n)
         else
           trace (show n ++ " does not exist") 
       _ ->
         trace "for some reason the response was not an exists"
-
     WikiResponseE error -> case error of
       InternalError message ->
         trace ("request failed because " ++ show message)
 
-  handleInput :: T.KeyboardEvent -> QueryEv
+
   handleInput keyevent = case currentK of
     "Enter" -> Search (getValue keyevent)
     _       -> DoNothing
     where currentK = keyCode keyevent
           currentT = getValue keyevent
 
-  render :: T.Render QuerySt QueryPs QueryEv
+
   render ctx _ _ = T.div [A._id "app", A.className "container"] [
-    T.h1' [T.text "Hello World"],
-    T.p'  [T.text "Welcome to my home page (-:"],
+    T.h1 [A.className "app-heading"] [T.text "WikiT"],
     T.input [T.onKeyPress ctx handleInput] []
   ]
 

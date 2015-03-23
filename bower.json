@@ -20,7 +20,7 @@
     "jquery": "~2.1.3",
     "purescript-thermite": "~0.5.2",
     "purescript-refs": "~0.1.2",
-    "purescript-client-routing": "~0.2.0",
+    "purescript-client-routing": "~0.5.0",
     "rsvp": "~3.0.17",
     "purescript-argonaut": "~0.4.0",
     "purescript-datetime": "~0.3.1"
