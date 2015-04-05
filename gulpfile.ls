@@ -28,6 +28,12 @@ html-source = 'client/index.html'
 scss-source = 'client/style/**/*.scss'
 
 
+ps-client-source = './client/src/**/*.purs'
+
+
+js-client-source = 'client/src.js/**/*.js'
+
+
 temp-src-js = 
   * 'temp/jslibs.js'
   * 'temp/compiled-purescript.js'
@@ -43,20 +49,20 @@ js-libs =
   * './bower_components/jquery/dist/jquery.js'
   * './bower_components/react/react.js'
   * './bower_components/rsvp/rsvp.js'
-  * './client/src.js/**/*.js'
+  * js-client-source
 
 
 ps-source = 
   * './bower_components/purescript-*/src/**/*.purs' 
   * './bower_components/purescript-*/src/**/*.purs.hs' 
-  * './client/src/**/*.purs'
+  * ps-client-source
 
 
 ps-tests = ps-source.concat do 
   * './client/tests/**/*.purs'
 
 
-client-src = [js-libs[0], ps-source[0]] 
+client-src = [ps-client-source, js-client-source] 
 
 
 ########################################################
