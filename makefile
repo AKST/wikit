@@ -13,7 +13,7 @@ define npm-check
 endef
 
 
-build: build-server build-client
+build: build-client build-server
 
 build-client:
 	${GULP} js-src-build html scss mocha-css
@@ -33,11 +33,20 @@ serve-client:
 serve-socket:
 	cabal run
 
+test: test-client test-server
+
 test-client:
 	${GULP} test
+
+test-server:
+	cabal test
 
 init:
 	$(call npm-check, bower, bower)
 	$(call npm-check, gulp,  gulp)
 	$(call npm-check, lsc,   LiveScript)
 	mkdir -p public/scripts public/styles
+	npm install
+	bower install
+	cabal sandbox init
+	cabal install

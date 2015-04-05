@@ -8,13 +8,8 @@ install:
   - tar -xvf $HOME/purescript.tar.gz -C $HOME/
   - chmod a+x $HOME/purescript 
   - make init
-  - npm install
-  - bower install
-  - cabal sandbox init
-  - cabal install
-  - make build-client 
-  - make build-server
+  - make build 
 script:
-  - make test-client
+  - make test
 
 
