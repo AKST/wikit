@@ -21,8 +21,8 @@ import Components.Common
 
 import qualified Data.Array as Array
 
-import Model.Revision
-import Model.API
+import Data.Revision
+import Data.API
 
 
 type ArticlePs = { store :: MS.MessageStore, article :: String }

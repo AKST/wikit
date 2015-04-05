@@ -1,4 +1,4 @@
-module Model.API where
+module Data.API where
 
 
 import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject, printJson)
@@ -6,8 +6,7 @@ import Data.Argonaut.Encode (EncodeJson, encodeJson)
 import Data.Argonaut.Decode (DecodeJson, decodeJson)
 import Data.Either (Either(Left))
 import Data.Maybe (Maybe(..))
-
-import Model.Revision 
+import Data.Revision 
 
 
 data WikiResponse 

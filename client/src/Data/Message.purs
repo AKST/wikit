@@ -1,6 +1,6 @@
-module Model.Message where 
+module Data.Message where 
 
-import Model.Status
+import Data.Status
 
 newtype Message = Message { text :: String, status :: Status } 
 

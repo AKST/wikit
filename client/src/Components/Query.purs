@@ -12,6 +12,9 @@ import Data.Argonaut (printJson)
 import Data.Argonaut.Encode (EncodeJson, encodeJson)
 import Data.Maybe
 import Data.Date
+import Data.Message
+import Data.Status
+import Data.API
 
 import Debug.Trace (trace, Trace(..))
 
@@ -31,11 +34,6 @@ import qualified Thermite.Events as T
 import qualified Thermite.Types as T
 
 import Components.Common
-
-import Model.Message
-import Model.Status
-
-import Model.API
 
 
 data QueryEv = DoNothing | Search String

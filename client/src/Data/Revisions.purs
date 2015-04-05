@@ -1,4 +1,4 @@
-module Model.Revision where
+module Data.Revision where
 
 
 import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject, printJson)

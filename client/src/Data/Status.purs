@@ -1,4 +1,4 @@
-module Model.Status where
+module Data.Status where
 
 
 data Status 
