@@ -173,7 +173,7 @@ gulp.task \test <[js-test-build]> ->
 ########################################################
 
 
-gulp.task \watch <[js-src-build html scss mocha-css maps]> !->
+gulp.task \watch <[js-src-build html scss mocha-css]> !->
   gulp.watch client-src, <[js-src-build test]>
   gulp.watch html-source, [\html]
   gulp.watch scss-source, [\scss]

@@ -14,22 +14,27 @@ import TestCommon
 
 
 tests = do
-  describe "Revisions" do
-    it "decode no revision" do
-      revisions <- parse """{
+
+  let epochStart = "1970-01-01T00:00:00.000Z"
+      emptyRevision = """{
+        "timestamp": "1970-01-01T00:00:00.000Z", 
+        "wikitext": ""
+      }"""
+      emptyRevisions = """{
         "continue": 0, 
         "revisions": []
       }"""
+
+  describe "Revisions" do
+    it "decode no revision" do
+      revisions <- parse emptyRevisions
       revisions @=? Revisions 0 []
 
   describe "Revision" do
     it "decode empty revision" do
-      date <- fromMaybe "couldn't parse date"
-        (Date.fromString "1970-01-01T00:00:00.000Z")
-      revision <- parse """{
-        "timestamp": "1970-01-01T00:00:00.000Z", 
-        "wikitext": ""
-      }"""
+      date <- fromMaybe "date parse error" 
+        (Date.fromString epochStart)
+      revision <- parse emptyRevision 
       revision @=? Revision date ""
 
 

@@ -39,13 +39,13 @@ instance decodeWikiResponse :: DecodeJson WikiResponse where
       "ok" -> do
         kind <- body .? "type"
         cont <- body .? "contents"
-        name <- cont .? "title"
+        name <- cont .? "name"
         result <- case kind of
           "check" -> do
             exists <- cont .? "exists"
             pure (AArticleExist name exists) 
           "revisions" -> do
-            revisions <- body .? "contents"
+            revisions <- cont .? "revisions"
             pure (ARevisions name revisions)
           _ ->
             Left ("\"" ++ kind ++ "\" is not a valid kind")

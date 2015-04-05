@@ -116,10 +116,11 @@ fromArticle v key = do
 instance ToJSON ArticleRevisions where
   toJSON (ArticleRevisions c t id ps) = 
     object [
-      "revisionContinue" .= c,
-      "title"  .= t,
-      "pageId" .= id,
-      "pages"  .= ps
+      "name" .= t,
+      "revisions" .= object [
+        "continue"  .= c,
+        "revisions" .= ps
+      ]
     ]
 
 instance ToJSON ArticleExists where
@@ -133,9 +134,7 @@ instance ToJSON Revision where
   toJSON (Revision t cf cm rb) =
     object [
       "timestamp" .= t, 
-      "contentformat" .= cf,
-      "contentmodel" .= cm,
-      "revisionBody" .= rb
+      "wikitext" .= rb
     ]
 
 instance ToJSON ConnError where
