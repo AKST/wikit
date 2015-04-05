@@ -13,6 +13,7 @@ install:
   - cabal sandbox init
   - cabal install
 script:
+  - make build-client 
   - make test-client
   - make build-server
 

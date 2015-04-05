@@ -16,7 +16,7 @@ endef
 build: build-server build-client
 
 build-client:
-	${GULP} js
+	${GULP} js-src-build html scss mocha-css
 
 build-server:
 	cabal build
