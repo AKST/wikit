@@ -21,5 +21,8 @@ serve-client:
 serve-socket:
 	cabal run
 
+test-client:
+	${GULP} test
+
 init:
 	mkdir -p public/scripts public/styles

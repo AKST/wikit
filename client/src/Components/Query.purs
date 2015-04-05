@@ -40,35 +40,33 @@ import Model.API
 
 data QueryEv = DoNothing | Search String
 type QuerySt = { message :: Maybe String }
-type QueryPs e = { store :: MS.MessageStore, setRoute :: R.SetRoute e }
+type QueryPs = { store :: MS.MessageStore, setRoute :: forall e. R.SetRoute e }
 type QueryEf e = (trace :: Trace, routing :: R.Routing, ws :: WS.WebSocket | e)
 
 
---
--- TODO rename as query
---
+--queryPage :: forall e. T.Spec (T.Action (QueryEf e) QuerySt) QuerySt QueryPs QueryEv
 queryPage = T.simpleSpec initialState performAction render where
 
 
   initialState = { message: Nothing }
 
 
+  --performAction :: T.PerformAction QueryPs QueryEv (T.Action (QueryEf e) QuerySt)
   performAction _ DoNothing = return unit 
   performAction props (Search articleName) = T.sync do
     trace ("checking the availablity of articles for " ++ show articleName)
-    MS.send props.store 
-      (onResponse props.setRoute) 
-      (QArticleExists { name: articleName })
+    MS.send props.store (onResponse props.setRoute) (QArticleExists articleName)
 
 
+  onResponse :: _ -> WikiResponse -> Eff _ Unit
   onResponse set respsonse = case respsonse of
     WikiResponseR result -> case result of 
-      AArticleExist { name: n, exists: e } ->
-        if e then do
-          trace (show n ++ " exists, redirecting") 
-          set ("article/" ++ n)
+      AArticleExist name exists ->
+        if exists then do
+          trace (show name ++ " exists, redirecting") 
+          set ("article/" ++ name)
         else
-          trace (show n ++ " does not exist") 
+          trace (show name ++ " does not exist") 
       _ ->
         trace "for some reason the response was not an exists"
     WikiResponseE error -> case error of
@@ -76,6 +74,7 @@ queryPage = T.simpleSpec initialState performAction render where
         trace ("request failed because " ++ show message)
 
 
+  --handleInput :: T.KeyboardEvent -> QueryEv
   handleInput keyevent = case currentK of
     "Enter" -> Search (getValue keyevent)
     _       -> DoNothing
@@ -83,6 +82,7 @@ queryPage = T.simpleSpec initialState performAction render where
           currentT = getValue keyevent
 
 
+  --render :: T.Render QuerySt QueryPs QueryEv
   render ctx _ _ = T.div [A._id "app", A.className "container"] [
     T.h1 [A.className "app-heading"] [T.text "WikiT"],
     T.input [T.onKeyPress ctx handleInput] []

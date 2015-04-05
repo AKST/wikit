@@ -7,11 +7,14 @@ module Network.MessageStore (
   
 ) where
 
+import Debug.Trace (trace, Trace(..))
+
 import Data.Argonaut ((~>), (:=), (.?), jsonEmptyObject, printJson)
 import Data.Argonaut.Core (Json(..))
 import Data.Argonaut.Encode (EncodeJson, encodeJson)
 import Data.Argonaut.Decode (DecodeJson, decodeJson, decodeMaybe)
 import Data.Maybe (Maybe(..))
+import Data.Either (Either(..))
 
 import Network.WebSocket (WebSocket(..), SocketError(..))
 
@@ -101,8 +104,17 @@ send store callback request = sendImpl store onResponse serialised where
   serialised = encodeJson request
   
   onResponse :: StoreResponse -> Eff e Unit
-  onResponse (StoreResponse resp) = case decodeMaybe resp of
-    Just response -> callback response
-    Nothing       -> return unit
+  onResponse (StoreResponse resp) = case (decodeJson resp) of
+    Right response    -> callback response
+    Left errorMessage -> debugLogging errorMessage 
+
+
+foreign import debugLogging """
+  function debugLogging(string) {
+    return function () {
+      console.error(string);
+    };
+  }
+  """ :: forall e. String -> Eff e Unit
 
 

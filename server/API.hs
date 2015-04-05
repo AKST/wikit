@@ -83,8 +83,8 @@ instance ToJSON Response where
     "body"      .= toJSON res]
   toJSON (ErrorRes _ id) = object [
     "timestamp" .= id,  
-    "status"    .= ("errro" :: Text),
-    "body"      .= [
+    "status"    .= ("error" :: Text),
+    "body"      .= object [
       "message" .= ("internal server error" :: Text)]]   
 
 instance ToJSON WikiTRes where 

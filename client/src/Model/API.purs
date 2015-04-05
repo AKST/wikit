@@ -7,6 +7,7 @@ import Data.Argonaut.Decode (DecodeJson, decodeJson)
 import Data.Either (Either(Left))
 import Data.Maybe (Maybe(..))
 
+import Model.Revision 
 
 
 data WikiResponse 
@@ -17,13 +18,13 @@ data WikiError
   = InternalError String
 
 data WikiResult 
-  = AArticleExist { name :: String, exists :: Boolean }
-  | ARevisions { name :: String }
+  = AArticleExist String Boolean
+  | ARevisions String Revisions
 
 data WikiRequest  
-  = QArticleExists { name :: String } 
-  | QStartRevisions { name :: String } 
-  | QContinueRevisions { name :: String, continue :: Number } 
+  = QArticleExists String 
+  | QStartRevisions String
+  | QContinueRevisions String Number
 
 
 
@@ -32,20 +33,21 @@ instance decodeWikiResponse :: DecodeJson WikiResponse where
     object <- decodeJson json
     status <- object .? "status"
     body   <- object .? "body"
-    cont   <- body .? "contents"
     case status of
       "error" -> do
-        msg <- cont .? "message"
+        msg <- body .? "message"
         pure (WikiResponseE (InternalError msg))
       "ok" -> do
         kind <- body .? "type"
-        name <- cont .? "name"
+        cont <- body .? "contents"
+        name <- cont .? "title"
         result <- case kind of
           "check" -> do
             exists <- cont .? "exists"
-            pure (AArticleExist { name: name, exists: exists }) 
+            pure (AArticleExist name exists) 
           "revisions" -> do
-            pure (ARevisions { name: name })
+            revisions <- body .? "contents"
+            pure (ARevisions name revisions)
           _ ->
             Left ("\"" ++ kind ++ "\" is not a valid kind")
         pure (WikiResponseR result)
@@ -53,17 +55,17 @@ instance decodeWikiResponse :: DecodeJson WikiResponse where
 
 
 instance encodeWikiRequest :: EncodeJson WikiRequest where
-  encodeJson (QArticleExists obj) 
-    =  "name" := obj.name 
+  encodeJson (QArticleExists name) 
+    =  "name" := name 
     ~> "type" := "check"
     ~> jsonEmptyObject
-  encodeJson (QStartRevisions obj) 
-    =  "name" := obj.name 
+  encodeJson (QStartRevisions name) 
+    =  "name" := name 
     ~> "type" := "start"
     ~> jsonEmptyObject
-  encodeJson (QContinueRevisions obj) 
-    =  "name"     := obj.name 
-    ~> "continue" := obj.continue 
+  encodeJson (QContinueRevisions name continue) 
+    =  "name"     := name 
+    ~> "continue" := continue 
     ~> "type"     := "continue"
     ~> jsonEmptyObject
 

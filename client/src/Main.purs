@@ -31,8 +31,7 @@ main = do
       let queryClass   = T.createClass queryPage
           articleClass = T.createClass articlePage
 
-      articleName <- param any
-      arciclePreF <- param (exact "article")
+      article <- param (exact "article")
 
       route0 empty do
         setter <- getSetRoute
@@ -40,14 +39,14 @@ main = do
           trace ("Welcome to WikiT")
           onReady queryClass { store: store, setRoute: setter }
 
-      route1 (arciclePreF -/ articleName +/ empty) $ \name -> do
+      route1 (article -/ regex "[a-zA-Z]+" +/ empty) $ \name -> do
         liftEff do
           trace ("now viewing revisions for \"" ++ name ++ "\"")
           onReady articleClass { store: store, article: name }
 
-      --notFound do
-      --  liftEff (trace "on found, redirecting to index")
-      --  setRoute "/"
+      -- notFound do
+      --   liftEff (trace "on found, redirecting to index")
+      --   setRoute "/"
 
 
 onReady :: forall props eff. T.ComponentClass props eff -> props -> Eff (dom :: DOM | eff) Unit 
