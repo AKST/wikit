@@ -10,6 +10,8 @@ install:
   - make init
   - npm install
   - bower install
+  - cabal sandbox init
 script:
   - make test-client
+  - make build-server
 
