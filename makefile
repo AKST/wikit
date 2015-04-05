@@ -37,8 +37,7 @@ test-client:
 	${GULP} test
 
 init:
-	$(call npm-check, phantomjs, phantomjs)
-	$(call npm-check, bower,     bower)
-	$(call npm-check, gulp,      gulp)
-	$(call npm-check, lsc,       LiveScript)
+	$(call npm-check, bower, bower)
+	$(call npm-check, gulp,  gulp)
+	$(call npm-check, lsc,   LiveScript)
 	mkdir -p public/scripts public/styles
