@@ -7,14 +7,13 @@ module Common (
   RevisionRes(RevisionRes),
   ExistsRes(ExistsRes),
 
-  ArticleRevisions(ArticleRevisions),
-  Revision(Revision)
 ) where
 
 
 import qualified Network.HTTP   as HTTP
 import qualified Network.Stream as HTTP
 
+import Data.Revisions
 import Data.Word
 import Data.Aeson
 import Data.Text (Text)
@@ -49,22 +48,6 @@ data ArticleExists = ArticleExists Text Bool
 newtype RevisionRes = RevisionRes ArticleRevisions 
 newtype ExistsRes = ExistsRes ArticleExists 
 
---
--- Article Revision 
---
-data ArticleRevisions = ArticleRevisions {
-  revisionContinue :: Word32,
-  title  :: Text,
-  pageId :: Word32,
-  pages :: [Revision]  
-}
-
-data Revision = Revision {
-  timestamp :: UTCTime,
-  contentFormat :: Text,
-  contentModel :: Text,
-  revisionBody :: Text
-}
 
 instance FromJSON RevisionRes where
   parseJSON (Object v) = do
@@ -91,15 +74,6 @@ instance FromJSON ExistsRes where
                       
 
     
-instance FromJSON Revision where
-  parseJSON (Object v) =
-    Revision <$> v .: "timestamp"
-             <*> v .: "contentformat" 
-             <*> v .: "contentmodel"
-             <*> v .: "*"
-  parseJSON _ = mzero
-
-
 getArticle v = do
   articles <- (v .: "query") >>= (.: "pages")
   case HM.elems (articles :: HM.HashMap Text Value) of 
@@ -113,16 +87,6 @@ fromArticle v key = do
     _          -> mzero
 
 
-instance ToJSON ArticleRevisions where
-  toJSON (ArticleRevisions c t id ps) = 
-    object [
-      "name" .= t,
-      "revisions" .= object [
-        "continue"  .= c,
-        "revisions" .= ps
-      ]
-    ]
-
 instance ToJSON ArticleExists where
   toJSON (ArticleExists name exists) =
     object [
@@ -130,13 +94,6 @@ instance ToJSON ArticleExists where
       "exists" .= exists
     ]
     
-instance ToJSON Revision where
-  toJSON (Revision t cf cm rb) =
-    object [
-      "timestamp" .= t, 
-      "wikitext" .= rb
-    ]
-
 instance ToJSON ConnError where
   toJSON error = object ["message" .= message] where
 

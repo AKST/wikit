@@ -5,6 +5,7 @@ import Prelude hiding (log)
 
 import qualified System.Log.Logger as L
 
+import Data.API
 import Data.Aeson
 import Data.Text (Text)
 import Data.ByteString.Lazy (ByteString)
@@ -14,10 +15,11 @@ import Control.Monad (void)
 import Control.Monad.Except
 import Control.Applicative
 
-import Connection
-import Wikipedia
+import Network.Connection
+import Network.Wikipedia
+
 import Common
-import API
+
 
 
 main :: IO ()

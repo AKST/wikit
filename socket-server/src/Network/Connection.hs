@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Connection (
+module Network.Connection (
 
   ConnOpts,
   Conn,
@@ -30,6 +30,7 @@ import qualified Network.HTTP       as HTTP
 import qualified Network.Stream     as HTTP
 import qualified Network.WebSockets as WS
 
+import Data.API
 import Data.Time 
 import Data.Word
 import Data.Aeson
@@ -46,7 +47,7 @@ import Control.Monad.Except
 import Control.Concurrent
 
 import Common
-import API
+
 
 
 data ConnOpts = ConnOpts { connection :: WS.Connection }

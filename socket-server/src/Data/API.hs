@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module API where
+module Data.API where
 
 
 import qualified Network.HTTP   as HTTP
@@ -9,7 +9,7 @@ import qualified Network.Stream as HTTP
 import Data.Word
 import Data.Aeson
 import Data.Text (Text)
-
+import Data.Revisions
 import Data.ByteString.Lazy
 
 import Control.Monad

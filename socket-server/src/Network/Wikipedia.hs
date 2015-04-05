@@ -1,16 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 
-module Wikipedia where
+module Network.Wikipedia where
 
 import Prelude hiding (log)
 
 import Network.URI
 import Network.HTTP.Base
+import Network.Connection 
 
 import System.Log (Priority(INFO))
-
-import Connection 
 
 import Data.Word
 import Data.Aeson
@@ -18,7 +17,6 @@ import Data.Text (Text)
 import Data.Time.Clock
 
 import qualified Data.HashMap.Strict as HM
-
 import qualified Data.Text    as T
 import qualified Data.Text.IO as T
 
