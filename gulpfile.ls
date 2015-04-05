@@ -35,7 +35,7 @@ ps-client-source = './client/src/**/*.purs'
 ps-client-tests = './client/tests/**/*.purs'
 
 
-js-client-source = 'client/src.js/**/*.js'
+js-client-source = 'client/js-src/**/*.js'
 
 
 temp-src-js = 
