@@ -163,11 +163,6 @@ gulp.task \clean ->
 
 
 gulp.task \test <[js-test-build]> ->
-  #
-  # not sure if this file is necessary but
-  # the docs for gulp-shell say include it
-  # so whatever
-  #
   gulp.src './public/tests.html'
     .pipe mocha-phantom-js do
       reporter: 'spec'
