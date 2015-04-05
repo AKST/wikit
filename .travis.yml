@@ -11,6 +11,7 @@ install:
   - npm install
   - bower install
   - cabal sandbox init
+  - cabal install
 script:
   - make test-client
   - make build-server
