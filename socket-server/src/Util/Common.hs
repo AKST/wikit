@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Common (
+module Util.Common (
   ConnError(FailedConnection, WikiResponseNotOk, CouldNotParseArticle),
   FatalError(UnknownFatalError, CouldntParseRequest),
   ArticleExists(ArticleExists),

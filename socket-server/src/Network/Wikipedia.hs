@@ -24,7 +24,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Except
 
-import Common
+import Util.Common
 
 
 data RevisionQuery = RevisionQuery {

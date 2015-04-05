@@ -15,7 +15,7 @@ import Data.ByteString.Lazy
 import Control.Monad
 import Control.Applicative
 
-import Common
+import Util.Common
 
 -- # Format of incoming messages
 

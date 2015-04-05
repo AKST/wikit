@@ -18,7 +18,7 @@ import Control.Applicative
 import Network.Connection
 import Network.Wikipedia
 
-import Common
+import Util.Common
 
 
 
