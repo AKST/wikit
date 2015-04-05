@@ -24,6 +24,8 @@
     "rsvp": "~3.0.17",
     "purescript-argonaut": "~0.4.0",
     "purescript-datetime": "~0.4.0",
-    "purescript-test-unit": "~1.1.5"
+    "purescript-simple-assert": "~0.2.1",
+    "purescript-mocha": "~0.0.3",
+    "purescript-chai": "~0.0.3"
   }
 }

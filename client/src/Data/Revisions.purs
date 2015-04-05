@@ -34,3 +34,12 @@ instance decodeRevisions :: DecodeJson Revisions where
     continue  <- object .? "revisionContinue"
     revisions <- object .? "pages"
     return (Revisions continue revisions)
+
+instance eqRevision :: Eq Revision where
+	(==) (Revision d1 c1) (Revision d2 c2) = d1 == d2 && c1 == c2 
+	(/=) r1 r2 = not (r1 == r2) 
+
+instance eqRevisions :: Eq Revisions where
+	(==) (Revisions c1 p1) (Revisions c2 p2) = c1 == c2 && p1 == p2
+	(/=) r1 r2 = not (r1 == r2) 
+
