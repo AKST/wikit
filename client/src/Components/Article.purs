@@ -39,12 +39,22 @@ data RevisionState
 data ArticleEv = InitFetch
 
 
--- articlePage :: forall e. T.Spec (T.Action (ArticleEf e) ArticleSt) ArticleSt ArticlePs ArticleEv
+--
+-- the state in which a page displayes the revisions
+--
+articlePage :: T.Spec _ ArticleSt ArticlePs ArticleEv
 articlePage = T.simpleSpec initialState performAction render
             # T.componentWillMount InitFetch where
 
+  -- 
+  -- At the start no revisions will have been obtained 
+  -- 
   initialState = { revisions: RevisionAwaited }
 
+
+  --
+  -- 
+  --
   performAction props action = 
     case action of
       InitFetch -> 
@@ -57,7 +67,6 @@ articlePage = T.simpleSpec initialState performAction render
   -- handles socket callback
   --
   socketCallback setState response = case response of
-
     WikiResponseR resp -> case resp of
       ARevisions name revisions -> do
         trace ("showing revisions for " ++ name ++ "...") 
@@ -73,15 +82,32 @@ articlePage = T.simpleSpec initialState performAction render
         setState { revisions: RevisionFetchFailed } 
 
 
-  render _ state props = T.div [A._id "app", A.className "container"] 
-    case state.revisions of 
+  --
+  --
+  --
+  render :: T.Render _ _ _
+  render _ state props = T.div [A._id "app", A.className "container"] [header, body, footer] where
+    header :: T.Html _
+    header = T.header [A.className "header"] [
+      T.h1 [A.className "articlename"] [T.text props.article]
+    ]
+
+    footer :: T.Html _ 
+    footer = T.footer [A.className "footer"] []
+
+    body :: T.Html _
+    body = case state.revisions of
       RevisionAwaited ->
-        [T.p' [T.text ("Awaiting articles for " ++ props.article)]]
-
+        T.p' [T.text ("Awaiting articles for " ++ props.article)]
       RevisionFetchFailed ->
-        [T.p' [T.text ("Could not load revisions for " ++ props.article)]]
+        T.p' [T.text ("Could not load revisions for " ++ props.article)]
+      RevisionLoaded (Revisions cont revisions) -> 
+        T.div [A.className "revisions"] (renderRevision <$> revisions) where
 
-      RevisionLoaded (Revisions cont revisions) ->
-        [T.p' [T.text ("Now viewing article for " ++ props.article)]]
+      renderRevision :: Revision -> T.Html _
+      renderRevision (Revision date body) = T.div [A.className "revision"] [
+        T.p' [T.text (show date)],
+        T.p' [T.text body]
+      ]
 
 

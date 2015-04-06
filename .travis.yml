@@ -9,7 +9,6 @@ install:
   - chmod a+x $HOME/purescript 
   - make init
   - make build 
-  - cabal configure --enable-tests
 script:
   - make test
 

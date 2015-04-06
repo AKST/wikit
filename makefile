@@ -55,3 +55,7 @@ init:
 	bower install
 	cabal sandbox init
 	cabal install --enable-tests
+	cabal configure --enable-tests
+	cabal build
+  
+
