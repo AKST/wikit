@@ -8,6 +8,7 @@ install:
   - tar -xvf $HOME/purescript.tar.gz -C $HOME/
   - chmod a+x $HOME/purescript 
   - make init
+  - cabal configure --enable-tests
   - make build 
 script:
   - make test
