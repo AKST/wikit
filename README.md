@@ -1,5 +1,23 @@
 # Wikit [![travis-ci](https://travis-ci.org/AKST/wikit.svg)](https://travis-ci.org/AKST/wikit)
 
+A intitive & (hopefully) fast method of reviewing wikipedia article revisions. Some cool things
+about this project.
+
+- No JS Framework, a libraries based approach (PS I'm not against frameworks) 
+- No CSS Framework, only css libraries
+- Uses Fast HTML APIs
+  - Web Sockets
+  - SVG
+  - History API
+  - Local Storage
+- Written an obcure alt-js lang called PureScript
+  - Haskell like staticly typed language designed with nice JS interope in mind
+  - Originally choose it because I assumed it would something similar to parsec
+  - This was actually the main reason I went with a libraries based approach
+
+
+# Local Development
+
 ## Dependencies
 
 - npm & node > 0.10 
