@@ -20,7 +20,7 @@ build-client:
 
 build-server:
 	cabal build wikit
-	cabal build test
+	cabal build wikit-tests
 
 watch-client: 
 	${GULP} watch
