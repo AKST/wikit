@@ -5,6 +5,12 @@ import Control.Monad.Cont.Trans
 import Control.Monad.Eff
 
 
+import qualified Text.Parsing.Parser as Parser
+import qualified Text.Parsing.Parser.Combinators as Parser
+import qualified Text.Parsing.Parser.Expr as Parser
+import qualified Text.Parsing.Parser.String as Parser
+import qualified Text.Parsing.Parser.Token as Parser
+
 import qualified Debug.Trace as Trace
 import qualified Data.Maybe as Maybe
 import qualified Data.Either as Either
@@ -13,9 +19,13 @@ import qualified Data.Argonaut as Argonaut
 import Data.Argonaut.Decode (DecodeJson)
 
 
+parseOrFail :: forall s a eff. Parser.Parser s a -> s -> Eff eff a 
+parseOrFail parser input = case Parser.runParser input parser of
+  Either.Right result                 -> pure result
+  Either.Left (Parser.ParseError err) -> throwException err.message
 
-parse :: forall d e. (DecodeJson d) => String -> Eff e d
-parse string = do
+decodeOrFail :: forall d e. (DecodeJson d) => String -> Eff e d
+decodeOrFail string = do
   let result = Argonaut.jsonParser string >>= Argonaut.decodeJson 
   case result of
     Either.Right r  -> pure r

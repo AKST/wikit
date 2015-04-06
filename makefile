@@ -16,7 +16,7 @@ endef
 build: build-client build-server
 
 build-client:
-	${GULP} js-src-build html scss mocha-css
+	${GULP} js-src-build html scss 3rd-party-css icons
 
 build-server:
 	cabal build wikit

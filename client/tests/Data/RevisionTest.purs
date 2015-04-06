@@ -6,7 +6,6 @@ import qualified Data.Either as Either
 import Data.Revision
 import Control.Monad.Eff
 
-import Test.Chai
 import Test.Mocha
 import Test.Assert.Simple
 
@@ -28,14 +27,14 @@ tests = do
 
   describe "Revisions" do
     it "decode no revision" do
-      revisions <- parse emptyRevisions
+      revisions <- decodeOrFail emptyRevisions
       revisions @=? Revisions 0 []
 
   describe "Revision" do
     it "decode empty revision" do
       date <- fromMaybe "date parse error" 
         (Date.fromString epochStart)
-      revision <- parse emptyRevision 
+      revision <- decodeOrFail emptyRevision 
       revision @=? Revision date ""
 
 

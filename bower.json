@@ -28,7 +28,10 @@
     "purescript-mocha": "~0.0.3",
     "purescript-chai": "~0.0.3",
     "es5-shim": "~4.1.0",
-    "purescript-parsing": "~0.3.1"
+    "purescript-parsing": "~0.3.1",
+    "open-iconic": "~1.1.1",
+    "skeleton-css": "~2.0.4",
+    "purescript-identity": "~0.3.0"
   },
   "resolutions": {
     "purescript-foldable-traversable": "~0.3.0",

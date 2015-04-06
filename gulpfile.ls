@@ -57,6 +57,12 @@ js-libs =
   * './bower_components/rsvp/rsvp.js'
   * js-client-source
 
+
+css-libs =
+  * './bower_components/mocha/mocha.css'
+  * './bower_components/skeleton-css/css/skeleton.css'
+
+
 ps-source = 
   * './bower_components/purescript-*/src/**/*.purs' 
   * './bower_components/purescript-*/src/**/*.purs.hs' 
@@ -138,14 +144,13 @@ gulp.task \html ->
   gulp.src html-source
     .pipe gulp.dest './public/.'
 
-gulp.task \mocha-css ->
-  gulp.src './bower_components/mocha/mocha.css'
+gulp.task \3rd-party-css ->
+  gulp.src css-libs 
     .pipe gulp.dest './public/style'
 
-gulp.task \maps ->
-  gulp.src './bower_components/**/*.map'
-    .pipe flatten()
-    .pipe gulp.dest './public/scripts'
+gulp.task \icons ->
+  gulp.src './bower_components/open-iconic/svg/*.svg'
+    .pipe gulp.dest './public/svg'
 
 ########################################################
 #                    HOUSE CLEANING                    # 
@@ -173,7 +178,7 @@ gulp.task \test <[js-test-build]> ->
 ########################################################
 
 
-gulp.task \watch <[js-src-build html scss mocha-css]> !->
+gulp.task \watch <[js-src-build html scss 3rd-party-css icons]> !->
   gulp.watch client-src, <[js-src-build test]>
   gulp.watch html-source, [\html]
   gulp.watch scss-source, [\scss]

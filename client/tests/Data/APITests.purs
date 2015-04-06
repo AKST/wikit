@@ -44,12 +44,12 @@ tests = do
 
 	describe "Exists API" do
 		it "decodes exists response" do
-			exists <- parse helloExists
+			exists <- decodeOrFail helloExists
 			exists @=? (WikiResponseR (AArticleExist "hello" true))  	
 
 	describe "Revisions API" do
 		it "decodes revisions response" do
-			revisions <- parse helloRevisions
+			revisions <- decodeOrFail helloRevisions
 			revisions @=? (WikiResponseR 
 				(ARevisions "hello" (Revisions 0 [])))  	
 
