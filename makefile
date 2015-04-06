@@ -49,5 +49,4 @@ init:
 	npm install
 	bower install
 	cabal sandbox init
-	cabal configure --enable-tests
-	cabal install
+	cabal install --enable-tests
