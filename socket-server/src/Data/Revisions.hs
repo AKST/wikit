@@ -18,14 +18,11 @@ import Data.Time.Clock
 data ArticleRevisions = ArticleRevisions {
   revisionContinue :: Word32,
   title  :: Text,
-  pageId :: Word32,
   pages :: [Revision]  
 }
 
 data Revision = Revision {
   timestamp :: UTCTime,
-  contentFormat :: Text,
-  contentModel :: Text,
   revisionBody :: Text
 }
 
@@ -33,20 +30,18 @@ data Revision = Revision {
 instance FromJSON Revision where
   parseJSON (Object v) =
     Revision <$> v .: "timestamp"
-             <*> v .: "contentformat" 
-             <*> v .: "contentmodel"
              <*> v .: "*"
   parseJSON _ = mzero
 
 instance ToJSON Revision where
-  toJSON (Revision t cf cm rb) =
+  toJSON (Revision t b) =
     object [
       "timestamp" .= t, 
-      "wikitext" .= rb
+      "wikitext" .= b
     ]
 
 instance ToJSON ArticleRevisions where
-  toJSON (ArticleRevisions c t id ps) = 
+  toJSON (ArticleRevisions c t ps) = 
     object [
       "name" .= t,
       "revisions" .= object [

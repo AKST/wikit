@@ -57,7 +57,6 @@ instance FromJSON RevisionRes where
          >>= (.: "revisions") 
          >>= (.: "rvcontinue")) 
       <*> article .: "title"
-      <*> article .: "pageid"
       <*> article .: "revisions"
     return (RevisionRes revisions)
   parseJSON _ = mzero
