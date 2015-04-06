@@ -25,7 +25,7 @@ watch-client:
 	${GULP} watch
 
 watch-server:
-	${WATCH} make build-server
+	${WATCH} make test
 	
 serve-client:
 	ruby -run -e httpd ./public -p3000
@@ -41,6 +41,10 @@ test-client:
 test-server:
 	cabal test
 
+debug-server:
+	$(call npm-check, wscat, wscat)
+	wscat -c ws://0.0.0.0:8080
+	
 init:
 	$(call npm-check, bower, bower)
 	$(call npm-check, gulp,  gulp)
