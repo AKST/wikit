@@ -19,7 +19,8 @@ build-client:
 	${GULP} js-src-build html scss mocha-css
 
 build-server:
-	cabal build
+	cabal build wikit
+	cabal build test
 
 watch-client: 
 	${GULP} watch

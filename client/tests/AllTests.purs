@@ -8,11 +8,13 @@ import TestCommon
 import qualified Control.Monad.JQuery as J
 
 import qualified Data.RevisionTest as Data.RevisionTest 
+import qualified Data.APITests as Data.APITests
 
 
 main = J.ready do
   initMocha
   Data.RevisionTest.tests
+  Data.APITests.tests
   runMocha
 
 

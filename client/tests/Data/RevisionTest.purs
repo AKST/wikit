@@ -15,15 +15,16 @@ import TestCommon
 
 tests = do
 
+  let emptyRevision = """{
+    "timestamp": "1970-01-01T00:00:00.000Z", 
+    "wikitext": ""
+  }"""
+  let emptyRevisions = """{
+    "continue": 0, 
+    "revisions": []
+  }"""
+
   let epochStart = "1970-01-01T00:00:00.000Z"
-      emptyRevision = """{
-        "timestamp": "1970-01-01T00:00:00.000Z", 
-        "wikitext": ""
-      }"""
-      emptyRevisions = """{
-        "continue": 0, 
-        "revisions": []
-      }"""
 
   describe "Revisions" do
     it "decode no revision" do

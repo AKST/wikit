@@ -27,7 +27,8 @@
     "purescript-simple-assert": "~0.2.1",
     "purescript-mocha": "~0.0.3",
     "purescript-chai": "~0.0.3",
-    "es5-shim": "~4.1.0"
+    "es5-shim": "~4.1.0",
+    "purescript-parsing": "~0.3.1"
   },
   "resolutions": {
     "purescript-foldable-traversable": "~0.3.0",
