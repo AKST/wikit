@@ -25,16 +25,17 @@ tests = do
 
   let epochStart = "1970-01-01T00:00:00.000Z"
 
-  describe "Revisions" do
-    it "decode no revision" do
-      revisions <- decodeOrFail emptyRevisions
-      revisions @=? Revisions 0 []
+  describe "Data.Revisions" do
+    describe "Revisions" do
+      it "decode no revision" do
+        revisions <- decodeOrFail emptyRevisions
+        revisions @=? Revisions 0 []
 
-  describe "Revision" do
-    it "decode empty revision" do
-      date <- fromMaybe "date parse error" 
-        (Date.fromString epochStart)
-      revision <- decodeOrFail emptyRevision 
-      revision @=? Revision date ""
+    describe "Revision" do
+      it "decode empty revision" do
+        date <- fromMaybe "date parse error" 
+          (Date.fromString epochStart)
+        revision <- decodeOrFail emptyRevision 
+        revision @=? Revision date ""
 
 

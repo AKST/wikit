@@ -17,39 +17,40 @@ import TestCommon
 
 tests = do
 
-	let helloExists = """{
-		"status":"ok",
-		"body": {
-			"type":"check",
-			"contents": {
-				"name":"hello",
-				"exists": true
-			}
-		}
-	}"""
+  let helloExists = """{
+    "status":"ok",
+    "body": {
+      "type":"check",
+      "contents": {
+        "name":"hello",
+        "exists": true
+      }
+    }
+  }"""
 
-	let helloRevisions = """{
-		"status":"ok",
-		"body": {
-			"type": "revisions",
-			"contents": {
-				"name":"hello",
-				"revisions": {
-					"continue": 0,
-					"revisions": []
-				}
-			}
-		}
-	}"""
+  let helloRevisions = """{
+    "status":"ok",
+    "body": {
+      "type": "revisions",
+      "contents": {
+        "name":"hello",
+        "revisions": {
+          "continue": 0,
+          "revisions": []
+        }
+      }
+    }
+  }"""
 
-	describe "Exists API" do
-		it "decodes exists response" do
-			exists <- decodeOrFail helloExists
-			exists @=? (WikiResponseR (AArticleExist "hello" true))  	
+  describe "Data.API" do
+    describe "Exists API" do
+      it "decodes exists response" do
+        exists <- decodeOrFail helloExists
+        exists @=? (WikiResponseR (AArticleExist "hello" true))   
 
-	describe "Revisions API" do
-		it "decodes revisions response" do
-			revisions <- decodeOrFail helloRevisions
-			revisions @=? (WikiResponseR 
-				(ARevisions "hello" (Revisions 0 [])))  	
+    describe "Revisions API" do
+      it "decodes revisions response" do
+        revisions <- decodeOrFail helloRevisions
+        revisions @=? (WikiResponseR 
+          (ARevisions "hello" (Revisions 0 [])))    
 
