@@ -1,5 +1,6 @@
 require! {
   'gulp-mocha-phantomjs': mocha-phantom-js 
+  'gulp-livereload': livereload 
   'gulp-purescript': purescript
   'gulp-flatten': flatten
   'gulp-concat': concat
@@ -112,6 +113,7 @@ gulp.task \ps-src-build ->
     .on \error (err) !->
       console.error err.message ? err
     .pipe gulp.dest \temp
+    .pipe livereload()
 
 
 gulp.task \ps-test-build ->
@@ -133,6 +135,7 @@ gulp.task \scss ->
   gulp.src './client/style/app.scss'
     .pipe sass!
     .pipe gulp.dest './public/style'
+    .pipe livereload()
 
 
 ########################################################
@@ -143,6 +146,7 @@ gulp.task \scss ->
 gulp.task \html ->
   gulp.src html-source
     .pipe gulp.dest './public/.'
+    .pipe livereload()
 
 gulp.task \3rd-party-css ->
   gulp.src css-libs 
@@ -179,6 +183,7 @@ gulp.task \test <[js-test-build]> ->
 
 
 gulp.task \watch <[js-src-build html scss 3rd-party-css icons]> !->
+  livereload.listen { port: 12345, base-path: 'public' }
   gulp.watch client-src, <[js-src-build test]>
   gulp.watch html-source, [\html]
   gulp.watch scss-source, [\scss]

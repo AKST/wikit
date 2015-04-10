@@ -18,6 +18,7 @@ import qualified Thermite.Events as T
 import qualified Thermite.Types as T
 
 import Components.Common
+import Components.Typography
 
 import qualified Data.Array as Array
 
@@ -86,14 +87,13 @@ articlePage = T.simpleSpec initialState performAction render
   --
   --
   render :: T.Render _ _ _
-  render _ state props = T.div [A._id "app", A.className "container"] [header, body, footer] where
-    header :: T.Html _
-    header = T.header [A.className "header"] [
-      T.h1 [A.className "articlename"] [T.text props.article]
-    ]
+  render _ state props = T.div [A._id "app", A.className "container"] elements where
 
-    footer :: T.Html _ 
-    footer = T.footer [A.className "footer"] []
+    elements = [
+      header props.article "articlename", 
+      body, 
+      T.footer [A.className "footer"] []
+    ]
 
     body :: T.Html _
     body = case state.revisions of

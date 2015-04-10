@@ -34,6 +34,7 @@ import qualified Thermite.Events as T
 import qualified Thermite.Types as T
 
 import Components.Common
+import Components.Typography
 
 
 data QueryEv = DoNothing | Search String
@@ -82,7 +83,7 @@ queryPage = T.simpleSpec initialState performAction render where
 
   --render :: T.Render QuerySt QueryPs QueryEv
   render ctx _ _ = T.div [A._id "app", A.className "container"] [
-    T.h1 [A.className "app-heading"] [T.text "WikiT"],
+    header "WikiT" "app-heading",
     T.input [T.onKeyPress ctx handleInput] []
   ]
 
