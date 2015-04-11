@@ -1,22 +1,24 @@
 module Data.WikiText where
 
+import Data.TextFormat
 
 data WikiText
-  --
-  -- {{ curly syntax }}
-  --
-  = Variable { name :: String }
-  | Template WikiTemplate
-  | Parameter WikiParameter
+  = AnyText String
+  | FormatText TextFormat String
 
-  --
-  -- XML / HTML
-  --
-  | Extension { tag :: String, body :: WikiText }
-  | Comment { body :: String }
-  | NoWiki { body :: String } 
+  -- --
+  -- -- {{ curly syntax }}
+  -- --
+  -- | Variable { name :: String }
+  -- | Template WikiTemplate
+  -- | Parameter WikiParameter
 
-  | AnyText { body :: String }
+  -- --
+  -- -- XML / HTML
+  -- --
+  -- | Extension { tag :: String, body :: WikiText }
+  -- | Comment { body :: String }
+  -- | NoWiki { body :: String } 
 
 
 data WikiTemplate 
@@ -33,14 +35,17 @@ data WikiParameter
 instance eqWikiText :: Eq WikiText where
   (/=) l r = not (l == r)
   
-  (==) (Variable { name: n1 }) (Variable { name: n2 }) = n1 == n2
-  (==) (Template template1)    (Template template2)    = template1 == template2
-  (==) (Parameter param1)      (Parameter param2)      = param1 == param2
-  (==) (Comment { body: b1 })  (Comment { body: b2 })  = b1 == b2
-  (==) (NoWiki { body: b1 })   (NoWiki { body: b2 })   = b1 == b2
-  (==) (AnyText { body: b1 })  (AnyText { body: b2 })  = b1 == b2
+  (==) (AnyText b1)       (AnyText b2)       = b1 == b2
+  (==) (FormatText f1 b1) (FormatText f2 b2) = f1 == f2 && b1 == b2
+  
+  -- (==) (Variable { name: n1 }) (Variable { name: n2 }) = n1 == n2
+  -- (==) (Template template1)    (Template template2)    = template1 == template2
+  -- (==) (Parameter param1)      (Parameter param2)      = param1 == param2
+  -- (==) (Comment { body: b1 })  (Comment { body: b2 })  = b1 == b2
+  -- (==) (NoWiki { body: b1 })   (NoWiki { body: b2 })   = b1 == b2
 
-  (==) (Extension { tag: t1, body: b1 }) (Extension { tag: t2, body: b2 }) = t1 == t2 && b1 == b2
+
+  -- (==) (Extension { tag: t1, body: b1 }) (Extension { tag: t2, body: b2 }) = t1 == t2 && b1 == b2
 
   (==) _ _ = false
 
@@ -67,13 +72,16 @@ instance eqWikiParameter :: Eq WikiParameter where
 -- SHOW INSTANCES
 
 instance showWikiText :: Show WikiText where
-  show (Variable { name: name })          = "Variable { name: " ++ show name ++ " }"
-  show (Template template)                = "Template (" ++ show template ++ ")"
-  show (Parameter param)                  = "Parameter (" ++ show param ++ ")"
-  show (Comment { body: body })           = "Comment { body: " ++ show body ++ " })"
-  show (NoWiki { body: body })            = "NoWiki { body: " ++ show body ++ " })"
-  show (AnyText { body: body })           = "AnyText { body: " ++ show body ++ " })"
-  show (Extension { tag: t, body: body }) = "Extension { tag: " ++ show t ++ ", body: " ++ show body ++ " })"
+  show (AnyText body) = "AnyText " ++ show body
+  show (FormatText f b) = "FormatText " ++ show f ++ " " ++ show b
+
+  -- show (Variable { name: name })          = "Variable { name: " ++ show name ++ " }"
+  -- show (Template template)                = "Template (" ++ show template ++ ")"
+  -- show (Parameter param)                  = "Parameter (" ++ show param ++ ")"
+  -- show (Comment { body: body })           = "Comment { body: " ++ show body ++ " })"
+  -- show (NoWiki { body: body })            = "NoWiki { body: " ++ show body ++ " })"
+
+  -- show (Extension { tag: t, body: body }) = "Extension { tag: " ++ show t ++ ", body: " ++ show body ++ " })"
 
 instance showWikiTemplate :: Show WikiTemplate where 
   show (NormalTemplate { name: n, text: t }) = "NormalTemplate { name: " ++ show n ++ ", text: " ++ show t ++ "})"
