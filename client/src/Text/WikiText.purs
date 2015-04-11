@@ -13,9 +13,13 @@ import Control.Apply
 import Control.Monad.Eff
 import Control.Lazy
 
+import qualified Data.String as String
+import qualified Data.Array as Array
 import Data.TextFormat
 import Data.Monoid
 import Data.WikiText
+import Data.Maybe
+import Data.Either
 -- import Data.Identity
 
 import Text.Parsing.Parser
@@ -61,14 +65,26 @@ linebreak :: WikiTextParser WikiText
 linebreak = pure LineBreak
 
 
+--
+-- parses media items
+--
 mediaLink :: WikiTextParser WikiText
 mediaLink = do
   string "[["
-  mediaType <- mediaTypes <* string ":" 
-  mediaLink <- anyStringTill (string "|thumb|")
-  mediaText <- manyTill bodyText (string "]]")
-  pure (Media mediaType mediaLink mediaText) where
 
+  mediaType <- mediaTypes <* string ":" 
+  mediaLink <- anyStringTill (string "|")
+  mediaMeta <- anyStringTillExceptBefore "[[" "]]"
+
+  case splitEnd (String.split "|" mediaMeta) of
+    Nothing -> fail ("couldn't split media info for " ++ show mediaMeta)
+    Just { init: mediaInfo, last: body } -> do
+      mediaText <- withParser bodyParser body
+      pure (Media mediaType mediaLink mediaInfo mediaText)
+
+  where
+
+    bodyParser = manyTill bodyText eof 
     mediaTypes = onString "File" File
 
 
@@ -166,6 +182,8 @@ formatText = italicsBold <|> bold <|> italics where
 leftDelimiter :: Parser String Unit
 leftDelimiter = lookAhead (choice [
   vstring "|",
+  vstring "[[[",
+  vstring "]]]",
   vstring "[[",
   vstring "]]",
   vstring "'''''",
@@ -177,6 +195,21 @@ leftDelimiter = lookAhead (choice [
 
   
 -- Utility
+
+type EndSplit a b = { init :: [a], last :: b }  
+
+
+withParser :: forall s a. Parser s a -> s -> Parser s a
+withParser parser input = case runParser input parser of
+  Left (ParseError error) -> fail error.message
+  Right result -> pure result
+
+
+splitEnd :: forall a. [a] -> Maybe (EndSplit a a)
+splitEnd list = do
+  init <- Array.init list
+  last <- Array.last list
+  pure { init: init, last: last }
 
 
 onString :: forall a. String -> a -> Parser String a
@@ -193,6 +226,28 @@ anyString = concat <$> many char
 
 anyStringTill :: Parser String _ -> Parser String String 
 anyStringTill p = concat <$> manyTill char p
+
+
+--
+-- So `anyStringTillExceptBefore "[[" "]]"` will parse this
+--
+--   blah blah [[hello]] [[hello]] .]]
+--   0.........1......0..1......0...Done
+--
+anyStringTillExceptBefore :: String -> String -> Parser String String 
+anyStringTillExceptBefore except end = impl 0 mempty where
+
+  exceptions :: String -> Number
+  exceptions s = (Array.length (String.split except s)) - 1
+
+  impl :: Number -> String -> Parser String String
+  impl n acc = do
+    content <- anyStringTill (string end)
+    case exceptions content of 
+      count
+        | count > 0 -> impl (n + count - 1) (acc ++ content ++ end)
+        | n     > 0 -> impl (n - 1) (acc ++ content ++ end)
+        | otherwise -> pure (acc ++ content)
 
 
 concat :: forall m. (Monoid m) => [m] -> m

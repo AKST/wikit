@@ -8,7 +8,7 @@ data WikiText
   = Text BodyText
   | LineBreak
   | Heading Number String
-  | Media MediaType String [BodyText]
+  | Media MediaType String [String] [BodyText]
 
   -- --
   -- -- {{ curly syntax }}
@@ -61,7 +61,7 @@ instance eqWikiText :: Eq WikiText where
   (==) LineBreak LineBreak = true
   (==) (Text t1) (Text t2) = t1 == t2
   (==) (Heading s1 b1) (Heading s2 b2) = s1 == s2 && b1 == b2
-  (==) (Media mt1 u1 t1) (Media mt2 u2 t2) = mt1 == mt1 && u1 == u2 && t1 == t2
+  (==) (Media mt1 u1 i1 t1) (Media mt2 u2 i2 t2) = mt1 == mt1 && u1 == u2 && t1 == t2 && i1 == i2
   -- (==) (Variable { name: n1 }) (Variable { name: n2 }) = n1 == n2
   -- (==) (Template template1)    (Template template2)    = template1 == template2
   -- (==) (Parameter param1)      (Parameter param2)      = param1 == param2
@@ -119,7 +119,9 @@ instance showWikiText :: Show WikiText where
   show (Text b) = "Text (" ++ show b ++ ")"
   show (Heading s b) = "Heading " ++ show s ++ " " ++ show b
   show LineBreak = "LineBreak"
-  show (Media mt u t) = "Media " ++ show mt ++ " " ++ show u ++ " " ++ show t
+  show (Media mt u i t) = "Media " 
+    ++ show mt ++ " " ++ show u ++ " " 
+    ++ show i ++ " " ++ show t
 
   -- show (Variable { name: name })          = "Variable { name: " ++ show name ++ " }"
   -- show (Template template)                = "Template (" ++ show template ++ ")"

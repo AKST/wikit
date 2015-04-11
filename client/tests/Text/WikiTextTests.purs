@@ -67,15 +67,25 @@ tests = do
           result <- Test.parseOrFail Parser.wikitext
             "[[File:Van Gogh.jpg|thumb|''Vincent's Chair'' by [[Vincent van Gogh]]]]"
 
-          Media File "Van Gogh.jpg" [
+          Media File "Van Gogh.jpg" ["thumb"] [
             FormatText Italic "Vincent's Chair",
             PlainText " by ",
             Link Internal "Vincent van Gogh" Nothing
           ] @=? result
 
+        it "[[File:SalisChair.jpg|thumb|left|upright|Early 20th century chair]]" do
+          --
+          -- file link with descriptors
+          --
+          result <- Test.parseOrFail Parser.wikitext
+            "[[File:SalisChair.jpg|thumb|left|upright|Early 20th century chair]]"
+
+          Media File "SalisChair.jpg" ["thumb", "left", "upright"] [
+            PlainText "Early 20th century chair"
+          ] @=? result
 
       describe "Line Breaks" do
-        it "\n" do
+        it "\\n" do
           result <- Test.parseOrFail Parser.wikitext "\n"
           LineBreak @=? result 
 
