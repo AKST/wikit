@@ -11,7 +11,7 @@ import qualified Text.Number as Number
 
 
 ddmmyyDate :: Date.Date -> String
-ddmmyyDate date = day ++ " / "  ++ month ++ " / " ++ year where
+ddmmyyDate date = day ++ "/"  ++ month ++ "/" ++ year where
   month = show (Enum.fromEnum (Date.month date) + 1)
   year  = case (Date.year date) of
     Date.Year n -> show (Int.toNumber n)

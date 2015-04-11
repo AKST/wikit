@@ -17,9 +17,9 @@ tests = do
 
   describe "Text.Date" do
     describe "Date formatting" do
-      it "1 / 1 / 1970" do
+      it "1/1/1970" do
         date <- fromMaybe "date parse error" epochStart
-        "1 / 1 / 1970" @=? (Text.ddmmyyDate date)
+        "1/1/1970" @=? (Text.ddmmyyDate date)
 
     describe "Time formatting" do
       it "00:00:00" do
