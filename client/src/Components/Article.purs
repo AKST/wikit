@@ -25,6 +25,8 @@ import qualified Data.Array as Array
 import Data.Revision
 import Data.API
 
+import qualified Text.Date as Text
+
 
 type ArticlePs = { store :: MS.MessageStore, article :: String }
 type ArticleSt = { revisions :: RevisionState }
@@ -106,7 +108,9 @@ articlePage = T.simpleSpec initialState performAction render
 
       renderRevision :: Revision -> T.Html _
       renderRevision (Revision date body) = T.div [A.className "revision"] [
-        T.p' [T.text (show date)],
+        T.p' [T.strong' [
+          T.text ((Text.hhmmssTime date) ++ " of " ++ (Text.ddmmyyDate date))
+        ]],
         T.p' [T.text body]
       ]
 

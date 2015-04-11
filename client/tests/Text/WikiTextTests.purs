@@ -20,9 +20,10 @@ import TestCommon
 --   http://www.mediawiki.org/wiki/Markup_spec
 --
 tests = do
-  describe "Wikitext Parser" $ do
-    it "Any Text" $ do
-      result <- parseOrFail wikitextParser "hello" 
-      result @=? AnyText { body: "hello" }
+  describe "Text.WikiText" do
+    describe "Any Text" $ do
+      it "hello" $ do
+        result <- parseOrFail wikitextParser "hello" 
+        result @=? AnyText { body: "hello" }
 
 

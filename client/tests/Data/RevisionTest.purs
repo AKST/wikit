@@ -23,7 +23,7 @@ tests = do
     "revisions": []
   }"""
 
-  let epochStart = "1970-01-01T00:00:00.000Z"
+  let epochStart = Date.fromString "1970-01-01T00:00:00.000Z"
 
   describe "Data.Revisions" do
     describe "Revisions" do
@@ -33,8 +33,7 @@ tests = do
 
     describe "Revision" do
       it "decode empty revision" do
-        date <- fromMaybe "date parse error" 
-          (Date.fromString epochStart)
+        date <- fromMaybe "date parse error" epochStart
         revision <- decodeOrFail emptyRevision 
         revision @=? Revision date ""
 

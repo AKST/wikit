@@ -7,7 +7,6 @@ import Data.API
 import Data.Revision
 import Control.Monad.Eff
 
-import Test.Chai
 import Test.Mocha
 import Test.Assert.Simple
 

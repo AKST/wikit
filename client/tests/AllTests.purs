@@ -10,11 +10,13 @@ import qualified Control.Monad.JQuery as J
 import qualified Data.RevisionTest as Data.RevisionTest 
 import qualified Data.APITests as Data.APITests
 import qualified Text.WikiTextTests as Text.WikiTextTests
+import qualified Text.DateTests as Text.DateTests
 
 
 main = J.ready do
   initMocha
   Text.WikiTextTests.tests
+  Text.DateTests.tests
   Data.RevisionTest.tests
   Data.APITests.tests
   runMocha
