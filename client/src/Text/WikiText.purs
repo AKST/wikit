@@ -36,13 +36,16 @@ article = manyTill wikitext eof
 wikitext :: WikiTextParser WikiText
 wikitext = 
   (atStartOfLine <?> "at start of line") <|> 
+  (try mediaLink <?> "media link") <|> 
   ((Text <$> bodyText) <?> "body text")
+
 
 bodyText :: WikiTextParser BodyText
 bodyText =
   (link <?> "link") <|> 
   (formatText <?> "format text") <|> 
   (anyText <?> "any text")
+
 
 --
 -- parser only at the start of a new line
@@ -56,6 +59,17 @@ atStartOfLine = string "\n" *> ((heading <?> "headings") <|> (linebreak <?> "lin
 --
 linebreak :: WikiTextParser WikiText
 linebreak = pure LineBreak
+
+
+mediaLink :: WikiTextParser WikiText
+mediaLink = do
+  string "[["
+  mediaType <- mediaTypes <* string ":" 
+  mediaLink <- anyStringTill (string "|thumb|")
+  mediaText <- manyTill bodyText (string "]]")
+  pure (Media mediaType mediaLink mediaText) where
+
+    mediaTypes = onString "File" File
 
 
 --
@@ -79,7 +93,7 @@ heading = h6 <|> h5 <|> h4 <|> h3 <|> h2 <|> h1 where
   h6 = headingImpl 6 "======"
 
   headingImpl size sep = Heading size <$> parser where
-    parser  = concat <$> (divider *> manyTill char divider)
+    parser  = divider *> anyStringTill divider
     divider = string sep 
 
 
@@ -90,7 +104,7 @@ heading = h6 <|> h5 <|> h4 <|> h3 <|> h2 <|> h1 where
 -- plain old text
 --
 anyText :: WikiTextParser BodyText
-anyText = PlainText <$> (concat <$> manyTill char leftDelimiter)
+anyText = PlainText <$> anyStringTill leftDelimiter
 
 
 --
@@ -104,21 +118,19 @@ anyText = PlainText <$> (concat <$> manyTill char leftDelimiter)
 --   - `[[[http...|hello]]]`
 --
 link :: WikiTextParser BodyText
-link = wrapper "[[[" "]]]" External
-   <|> wrapper "[["  "]]"  Internal where   
+link = linkImpl "[[[" "]]]" External
+   <|> linkImpl "[["  "]]"  Internal where   
 
-  wrapper left right t = do 
+  linkImpl left right t = do 
     --
-    -- left delimiter
+    -- left delimiter && link target
     --
-    string left 
-    linkTarget  <- concat <$> manyTill char endOfLinkDelimiter
+    linkTarget <- string left *> anyStringTill endOfLinkDelimiter
     --
     -- optional display text
     --
     displayText <- optionMaybe do
-      string "|"
-      concat <$> manyTill char (lookAhead (string right))
+      string "|" *> anyStringTill (lookAhead (string right))
     --
     -- right delimiter
     --
@@ -130,8 +142,7 @@ link = wrapper "[[[" "]]]" External
       -- a `|` if there is defined display text, or the right
       -- link delimiter if there is no display text.
       --
-      endOfLinkDelimiter = lookAhead
-        (string "|" <|> string right) 
+      endOfLinkDelimiter = lookAhead (string "|" <|> string right) 
 
 --
 -- Format Text
@@ -148,7 +159,7 @@ formatText = italicsBold <|> bold <|> italics where
   italicsBold = (format ItalicBold "'''''") <?> "italic bold" 
 
   format t sep = FormatText t <$> parser where
-    parser  = concat <$> (divider *> manyTill char divider)
+    parser  = divider *> anyStringTill divider
     divider = string sep 
 
 
@@ -166,6 +177,11 @@ leftDelimiter = lookAhead (choice [
 
   
 -- Utility
+
+
+onString :: forall a. String -> a -> Parser String a
+onString str e = string str *> pure e
+
 
 vstring :: String -> Parser String Unit
 vstring str = string str *> pure unit

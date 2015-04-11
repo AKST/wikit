@@ -38,22 +38,47 @@ tests = do
           Text (FormatText Bold "hello") @=? result
 
         it "'''''hello''''' (italic bold text)" do
+          --
+          -- italic bold text
+          --
           result <- Test.parseOrFail Parser.wikitext "'''''hello'''''"
           Text (FormatText ItalicBold "hello") @=? result
 
         it "[[Hello World|hello]] (Internal Link)" do
+          --
+          -- internal link
+          --
           result <- Test.parseOrFail Parser.wikitext "[[Hello World|hello]]"
           Text (Link Internal "Hello World" (Just "hello")) @=? result
 
         it "[[[Hello World|hello]]] (External link)" do
+          --
+          -- external link
+          --
           result <- Test.parseOrFail Parser.wikitext "[[[Hello World|hello]]]"
           Text (Link External "Hello World" (Just "hello")) @=? result
 
 
-      describe "Line Break" do
+      describe "content links" do
+        it "[[File:Van Gogh.jpg|thumb|''Vincent's Chair'' by [[Vincent van Gogh]]]] (Image)" $ do
+          --
+          -- file link
+          --
+          result <- Test.parseOrFail Parser.wikitext
+            "[[File:Van Gogh.jpg|thumb|''Vincent's Chair'' by [[Vincent van Gogh]]]]"
+
+          Media File "Van Gogh.jpg" [
+            FormatText Italic "Vincent's Chair",
+            PlainText " by ",
+            Link Internal "Vincent van Gogh" Nothing
+          ] @=? result
+
+
+      describe "Line Breaks" do
         it "\n" do
           result <- Test.parseOrFail Parser.wikitext "\n"
           LineBreak @=? result 
+
 
       describe "headings" do
         it "=hello=" do

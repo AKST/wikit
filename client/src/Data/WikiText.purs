@@ -8,6 +8,7 @@ data WikiText
   = Text BodyText
   | LineBreak
   | Heading Number String
+  | Media MediaType String [BodyText]
 
   -- --
   -- -- {{ curly syntax }}
@@ -37,6 +38,10 @@ data BodyText
 data LinkType = External | Internal
 
 
+data MediaType 
+  = File
+
+
 data WikiTemplate 
   = NormalTemplate { name :: String, text :: String }
   | ParamTemplate { name :: String, param :: String, fallback :: String }
@@ -46,7 +51,9 @@ data WikiParameter
   = TextParameter { name :: String, text :: String }
   | RefParameter { name :: String, param :: String }
 
+
 -- EQ INSTANCES 
+
 
 instance eqWikiText :: Eq WikiText where
   (/=) l r = not (l == r)
@@ -54,6 +61,7 @@ instance eqWikiText :: Eq WikiText where
   (==) LineBreak LineBreak = true
   (==) (Text t1) (Text t2) = t1 == t2
   (==) (Heading s1 b1) (Heading s2 b2) = s1 == s2 && b1 == b2
+  (==) (Media mt1 u1 t1) (Media mt2 u2 t2) = mt1 == mt1 && u1 == u2 && t1 == t2
   -- (==) (Variable { name: n1 }) (Variable { name: n2 }) = n1 == n2
   -- (==) (Template template1)    (Template template2)    = template1 == template2
   -- (==) (Parameter param1)      (Parameter param2)      = param1 == param2
@@ -96,13 +104,22 @@ instance eqWikiParameter :: Eq WikiParameter where
 
   (==) _ _ = false
 
+instance eqMediaType :: Eq MediaType where 
+  (/=) l r = not (l == r)
+
+  (==) File File = true
+  (==) _ _ = false
+
+
+
 -- SHOW INSTANCES
 
-instance showWikiText :: Show WikiText where
 
+instance showWikiText :: Show WikiText where
   show (Text b) = "Text (" ++ show b ++ ")"
   show (Heading s b) = "Heading " ++ show s ++ " " ++ show b
   show LineBreak = "LineBreak"
+  show (Media mt u t) = "Media " ++ show mt ++ " " ++ show u ++ " " ++ show t
 
   -- show (Variable { name: name })          = "Variable { name: " ++ show name ++ " }"
   -- show (Template template)                = "Template (" ++ show template ++ ")"
@@ -129,5 +146,7 @@ instance showWikiParameter :: Show WikiParameter where
   show (TextParameter { name: n, text: t }) = "TextParameter { name: " ++ show n ++ ", text: " ++ show t ++ "}"
   show (RefParameter { name: n, param: p }) = "RefParameter { name: " ++ show n ++ ", param: " ++ show p ++ "}"
 
+instance showMediaType :: Show MediaType where
+  show File = "File"
 
 
