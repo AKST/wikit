@@ -92,7 +92,9 @@ articlePage = T.simpleSpec initialState performAction render
   render _ state props = T.div [A._id "app", A.className "container"] elements where
 
     elements = [
-      header props.article "articlename", 
+      header props.article [
+        { iconName: "delete", url: "/" }
+      ], 
       body, 
       T.footer [A.className "footer"] []
     ]

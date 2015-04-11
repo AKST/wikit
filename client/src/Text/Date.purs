@@ -18,8 +18,9 @@ ddmmyyDate date = day ++ " / "  ++ month ++ " / " ++ year where
   day   = case Date.dayOfMonth date of
     Date.DayOfMonth n -> show (Int.toNumber n)
 
+
 hhmmssTime :: Date.Date -> String
-hhmmssTime date = hour ++ ":" ++ minute ++ ":" ++ second ++ "." ++ ms where
+hhmmssTime date = hour ++ ":" ++ minute ++ ":" ++ second where
 
   hour = case Date.hourOfDay date of
     Date.HourOfDay h -> 
@@ -33,16 +34,4 @@ hhmmssTime date = hour ++ ":" ++ minute ++ ":" ++ second ++ "." ++ ms where
     Date.SecondOfMinute s -> 
       s # Int.toNumber # Number.prefixedZeros 2 
 
-  ms = case Date.millisecondOfSecond date of
-    Date.MillisecondOfSecond s -> 
-      s # Int.toNumber # Number.prefixedZeros 3 
-
--- hhmmssTime date = hour ++ ":" ++ minute ++ ":" ++ second ++ "." ++ ms where
---   hour   = showEnum (Date.hourOfDay date)
---   minute = showEnum (Date.minuteOfHour date)
---   second = showEnum (Date.secondOfMinute date)
---   ms     = showEnum (Date.millisecondOfSecond date)
-
--- showEnum :: forall n. (Enum.Enum n) => n -> String
--- showEnum n = show (Int.fromNumber (Enum.fromEnum n) + 1)
 

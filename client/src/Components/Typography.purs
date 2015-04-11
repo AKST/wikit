@@ -8,8 +8,24 @@ import qualified Thermite.Action as T
 import qualified Thermite.Events as T
 import qualified Thermite.Types as T
 
+import Data.Array
 
-header text className = T.header [A.className "header"] [
-  T.h1 [A.className className] [T.text text]
-] 
+
+header text links = T.header [A.className "header"] [
+    T.h1 [A.className "page-heading u-pull-left"] [T.text text],
+    T.nav [A.className "navigation u-pull-right"] [
+      T.ul [A.className "navigation-list"] (iconify <$> links)]] 
+
+  where 
+
+    iconify { iconName: i, url: url } =
+      T.li [A.className "navigation-item"] [
+        T.a [A.href url, A.className ("navigation-link")] [
+          T.img [
+            A.className "navigation-icon", 
+            A.src ("/svg/" ++ i ++ ".svg")
+          ] []
+        ]
+      ]
+
 

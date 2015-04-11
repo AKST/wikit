@@ -83,7 +83,7 @@ queryPage = T.simpleSpec initialState performAction render where
 
   --render :: T.Render QuerySt QueryPs QueryEv
   render ctx _ _ = T.div [A._id "app", A.className "container"] [
-    header "WikiT" "app-heading",
+    header "WikiT" [],
     T.input [T.onKeyPress ctx handleInput] []
   ]
 

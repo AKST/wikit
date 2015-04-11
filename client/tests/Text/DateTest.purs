@@ -22,7 +22,7 @@ tests = do
         "1 / 1 / 1970" @=? (Text.ddmmyyDate date)
 
     describe "Time formatting" do
-      it "00:00:00.000" do
+      it "00:00:00" do
         date <- fromMaybe "date parse error" epochStart
-        "00:00:00.000" @=? (Text.hhmmssTime date)
+        "00:00:00" @=? (Text.hhmmssTime date)
 
