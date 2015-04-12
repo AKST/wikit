@@ -6,7 +6,9 @@
     <script src="scripts/app.js"></script>
     <link href="style/skeleton.css" media="all" rel="stylesheet"></link>
     <link href="style/app.css" media="all" rel="stylesheet"></link>
-    <script src="http://localhost:12345/livereload.js"></script>
+    {{^isProduction}}
+      <script src="http://localhost:12345/livereload.js"></script>
+    {{/isProduction}}
   </head>
   <body></body>
 </html>

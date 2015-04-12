@@ -2,6 +2,7 @@ require! {
   'gulp-mocha-phantomjs': mocha-phantom-js 
   'gulp-livereload': livereload 
   'gulp-purescript': purescript
+  'gulp-mustache': mustache
   'gulp-flatten': flatten
   'gulp-concat': concat
   'gulp-clean': clean
@@ -145,6 +146,8 @@ gulp.task \scss ->
 
 gulp.task \html ->
   gulp.src html-source
+    .pipe mustache do
+      is-production: process.env.ENV == 'PROD'
     .pipe gulp.dest './public/.'
     .pipe livereload()
 
