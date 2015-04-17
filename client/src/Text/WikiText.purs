@@ -7,6 +7,9 @@ module Text.WikiText (
 ) where
 
 
+import Util.Array
+import Util.Monoid
+
 import Control.Alt
 import Control.Alternative
 import Control.Apply
@@ -269,33 +272,5 @@ anyStringTillExceptBefore except end = impl 0 mempty where
         | n     > 0 -> impl (n - 1) (acc ++ content ++ end)
         | otherwise -> pure (acc ++ content)
 
-
-concat :: forall m. (Monoid m) => [m] -> m
-concat elems = impl mempty elems where
-	impl acc (x:xs) = impl (acc <> x) xs
-	impl acc [    ] = acc
-
-
---
---
---
-
-
-type EndSplit a = { init :: [a], last :: a }  
-type StartSplit a = { head :: a, tail :: [a] }  
-
-
-splitEnd :: forall a. [a] -> Maybe (EndSplit a)
-splitEnd list = do
-  init <- Array.init list
-  last <- Array.last list
-  pure { init: init, last: last }
-
-
-splitStart :: forall a. [a] -> Maybe (StartSplit a)
-splitStart list = do
-  head <- Array.head list
-  tail <- Array.tail list
-  pure { head: head, tail: tail }
 
 
