@@ -36,6 +36,7 @@ wikitoken = space
         <|> punctuation
         <|> delimiter
         <|> linebreak 
+        <|> ambigious
         <|> word
 
 
@@ -45,6 +46,11 @@ linebreak = Linebreak `onString` "\n" <?> "line break"
 
 space :: WikiTokenParser WikiToken
 space = Space `onString` " " <?> "space"
+
+
+ambigious :: WikiTokenParser WikiToken
+ambigious = assignOperator `onString` "=" where
+  assignOperator = Ambigious [ClosingDelimiter (DeHeading 1), NamedParameterAssignment] 
 
 
 word :: WikiTokenParser WikiToken
@@ -88,7 +94,6 @@ delimiter = (OpeningDelimiter <$> opening)
         <|> DeHeading 4 `onString` "===="
         <|> DeHeading 3 `onString` "==="
         <|> DeHeading 2 `onString` "=="
-        <|> DeHeading 1 `onString` "="
 
   --
   -- Delimiters which by themselves are immediately obvious

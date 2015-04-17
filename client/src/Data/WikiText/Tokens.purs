@@ -10,6 +10,8 @@ data WikiToken
   | OpeningDelimiter Delimiter
   | ClosingDelimiter Delimiter
   | AmbigiousDelimiter AmbigiousDelimiter
+  | NamedParameterAssignment
+  | Ambigious [WikiToken]
 
 
 data Punctuation 
@@ -48,6 +50,8 @@ instance eqWikiToken :: Eq WikiToken where
   (==) (Word w1) (Word w2) = w1 == w2
   (==) Linebreak Linebreak = true
   (==) Space Space = true
+  (==) NamedParameterAssignment NamedParameterAssignment = true
+  (==) (Ambigious a) (Ambigious b) = a == b
   (==) _ _ = false
   
 
@@ -93,6 +97,8 @@ instance showWikiToken :: Show WikiToken where
   show (OpeningDelimiter d) = "OpeningDelimiter (" ++ show d ++ ")"
   show (ClosingDelimiter d) = "ClosingDelimiter (" ++ show d ++ ")"
   show (AmbigiousDelimiter d) = "AmbigiousDelimiter (" ++ show d ++ ")"
+  show NamedParameterAssignment = "NamedParameterAssignment"
+  show (Ambigious as) = "Ambigious " ++ show as 
   show Space = "Space"
 
 

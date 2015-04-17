@@ -86,7 +86,10 @@ tests = do
           Space,
           ClosingDelimiter (DeHeading 2),
           Space,
-          ClosingDelimiter (DeHeading 1)
+          Ambigious [
+            ClosingDelimiter (DeHeading 1),
+            NamedParameterAssignment
+          ]
         ] @=? result
 
       it "\\n====== \\n===== \\n==== \\n=== \\n== \\n=" do
