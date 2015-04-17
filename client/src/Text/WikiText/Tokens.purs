@@ -21,6 +21,8 @@ import Data.WikiText.Tokens
 import Data.TextFormat
 import qualified Data.Set as Set
 import qualified Data.Map as Map
+import qualified Data.Tuple as Tuple 
+import qualified Data.Maybe as Maybe 
 
 import Util.Array
 import Util.Monoid
@@ -119,9 +121,9 @@ xml = Xml <$> (closingTag <|> selfClosingTag <|> openingTag) where
 
   openingTag = try do 
     string "<" *> skipSpaces
-    tagName <- wordString
-    skipSpaces *> string ">"
-    pure (Opening tagName)
+    tagName <- wordString <* skipSpaces
+    attrs   <- attributes ">"
+    pure (Opening tagName attrs)
 
   closingTag = try do 
     string "</" *> skipSpaces
@@ -131,19 +133,34 @@ xml = Xml <$> (closingTag <|> selfClosingTag <|> openingTag) where
 
   selfClosingTag = try do 
     string "<" *> skipSpaces
-    tagName <- wordString
-    skipSpaces *> string "/>"
-    pure (SelfClosing tagName)
+    tagName <- wordString <* skipSpaces
+    attrs   <- attributes "/>"
+    pure (SelfClosing tagName attrs)
+
+
+  attributes end = do
+    attrs <- (manyTill attribute (string end))
+    pure (Map.fromList attrs)
+
+    where
+      attribute = do
+        name  <- wordStringImpl ["="] <* skipSpaces <* string "="
+        value <- string "\"" *> wordStringImpl ["\""] <* string "\""
+        pure (Tuple.Tuple name value) <* skipSpaces
 
 --
 -- Utility
 --
 
 
-wordString :: Parser String String 
-wordString = concat <$> char `manyTill` delimiter where
+wordStringImpl :: [String] -> Parser String String 
+wordStringImpl other = concat <$> char `manyTill` delimiter where
   delimiter    = lookAhead (specialChars *> pure unit) <|> eof
-  specialChars = oneOf (whitespace ++ special ++ punctuations)
+  specialChars = oneOf (other ++ whitespace ++ special ++ punctuations)
+
+
+wordString :: Parser String String 
+wordString = wordStringImpl []
 
 
 onString :: forall a. a -> String -> Parser String a

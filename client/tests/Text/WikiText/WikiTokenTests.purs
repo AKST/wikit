@@ -6,6 +6,7 @@ import Test.Assert.Simple
 
 import Data.WikiText.Tokens
 import Data.TextFormat
+import Data.Tuple
 import qualified Data.Set as Set
 import qualified Data.Map as Map
 
@@ -114,26 +115,31 @@ tests = do
       it "<ref>hello</ref>" do
         result <- Test.parseOrFail Parser.tokens "<ref>hello</ref>"
         [
-          Xml (Opening "ref"),
+          Xml (Opening "ref" (Map.fromList [])),
           Word "hello",
           Xml (Closing "ref")
         ] @=? result
         
       it "<ref/>" do
         result <- Test.parseOrFail Parser.tokens "<ref/>"
-        [Xml (SelfClosing "ref")] @=? result
+        [Xml (SelfClosing "ref" (Map.fromList []))] @=? result
 
       it "<ref />" do
         result <- Test.parseOrFail Parser.tokens "<ref />"
-        [Xml (SelfClosing "ref")] @=? result
+        [Xml (SelfClosing "ref" (Map.fromList []))] @=? result
 
 
       it "< ref ></ ref >" do
         result <- Test.parseOrFail Parser.tokens "< ref ></ ref >"
-        [Xml (Opening "ref"), Xml (Closing "ref")] @=? result
+        [Xml (Opening "ref" (Map.fromList [])), Xml (Closing "ref")] @=? result
 
 
-      -- it "<ref name=\"john\"></ref>" do
-      --   result <- Test.parseOrFail Parser.tokens "<ref name=\"john\"></ref>"
-      --   [Xml (SelfClosing "ref")] @=? result
+      it "<ref name=\"john\"></ref>" do
+        result <- Test.parseOrFail Parser.tokens "<ref name=\"john\"></ref>"
+        [
+          Xml (Opening "ref" (Map.fromList [
+            Tuple "name" "john"
+          ])),
+          Xml (Closing "ref")
+        ] @=? result
 

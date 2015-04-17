@@ -14,9 +14,9 @@ import qualified Data.Map as Map
 
 
 data Xml
-  = Opening String -- (Map.Map String String)
+  = Opening String (Map.Map String String)
   | Closing String
-  | SelfClosing String -- (Map.Map String String)
+  | SelfClosing String (Map.Map String String)
 
 
 data WikiToken
@@ -104,9 +104,9 @@ instance eqAmbigiousDelimiter :: Eq AmbigiousDelimiter where
 instance eqXml :: Eq Xml where
   (/=) a b = not (a == b)
 
-  (==) (Opening a) (Opening b) = a == b
+  (==) (Opening a ma) (Opening b mb) = a == b && ma == mb
   (==) (Closing a) (Closing b) = a == b
-  (==) (SelfClosing a) (SelfClosing b) = a == b
+  (==) (SelfClosing a ma) (SelfClosing b mb) = a == b && ma == mb
   (==) _ _ = false
 
 
@@ -151,8 +151,8 @@ instance showPunctuation :: Show Punctuation where
 
 instance showXml :: Show Xml where
   show (Closing n) = "Closing " ++ show n
-  show (Opening n) = "Opening " ++ show n
-  show (SelfClosing n) = "SelfClosing " ++ show n
+  show (Opening n m) = "Opening " ++ show n ++ " " ++ show m
+  show (SelfClosing n m) = "SelfClosing " ++ show n ++ " " ++ show m
 
 
 --
@@ -176,13 +176,16 @@ instance ordWikiText :: Ord WikiToken where
     Space -> LT
     Pipe -> LT
     Xml otherXml -> case [xml, otherXml] of
-      [Opening a, Opening b] -> a `compare` b
-      [Opening _, _        ] -> GT
-      [Closing a, Opening b] -> LT
+      --
+      -- todo compare attributes
+      --
+      [Opening a _, Opening b _] -> a `compare` b
+      [Opening _ _, _        ] -> GT
+      [Closing a, Opening b _] -> LT
       [Closing a, Closing b] -> a `compare` b
       [Closing _, _        ] -> GT
-      [SelfClosing a, _    ] -> LT
-      [SelfClosing a, SelfClosing b] -> a `compare` b
+      [SelfClosing a _, SelfClosing b _] -> a `compare` b
+      [SelfClosing a _, _              ] -> LT
     _ -> GT
   compare (Word word) other = case other of
     Linebreak -> LT
