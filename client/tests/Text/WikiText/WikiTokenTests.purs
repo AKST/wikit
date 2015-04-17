@@ -6,6 +6,8 @@ import Test.Assert.Simple
 
 import Data.WikiText.Tokens
 import Data.TextFormat
+import qualified Data.Set as Set
+import qualified Data.Map as Map
 
 import qualified Text.WikiText.Tokens as Parser
 import qualified TestCommon as Test
@@ -86,10 +88,10 @@ tests = do
           Space,
           ClosingDelimiter (DeHeading 2),
           Space,
-          Ambigious [
-            ClosingDelimiter (DeHeading 1),
+          Ambigious (Set.fromList [
+            ClosingDelimiter (DeHeading 1), 
             NamedParameterAssignment
-          ]
+          ])
         ] @=? result
 
       it "\\n====== \\n===== \\n==== \\n=== \\n== \\n=" do
@@ -120,4 +122,18 @@ tests = do
       it "<ref/>" do
         result <- Test.parseOrFail Parser.tokens "<ref/>"
         [Xml (SelfClosing "ref")] @=? result
+
+      it "<ref />" do
+        result <- Test.parseOrFail Parser.tokens "<ref />"
+        [Xml (SelfClosing "ref")] @=? result
+
+
+      it "< ref ></ ref >" do
+        result <- Test.parseOrFail Parser.tokens "< ref ></ ref >"
+        [Xml (Opening "ref"), Xml (Closing "ref")] @=? result
+
+
+      -- it "<ref name=\"john\"></ref>" do
+      --   result <- Test.parseOrFail Parser.tokens "<ref name=\"john\"></ref>"
+      --   [Xml (SelfClosing "ref")] @=? result
 

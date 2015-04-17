@@ -19,6 +19,8 @@ import Text.Parsing.Parser.Token
 
 import Data.WikiText.Tokens
 import Data.TextFormat
+import qualified Data.Set as Set
+import qualified Data.Map as Map
 
 import Util.Array
 import Util.Monoid
@@ -34,6 +36,7 @@ tokens = (wikitoken <?> "wikitoken") `manyTill` eof
 wikitoken :: WikiTokenParser WikiToken
 wikitoken = space
         <|> xml
+        <|> pipe
         <|> punctuation
         <|> delimiter
         <|> linebreak 
@@ -49,9 +52,16 @@ space :: WikiTokenParser WikiToken
 space = Space `onString` " " <?> "space"
 
 
+pipe :: WikiTokenParser WikiToken
+pipe = Pipe `onString` "|" <?> "pipe"
+
+
 ambigious :: WikiTokenParser WikiToken
 ambigious = assignOperator `onString` "=" where
-  assignOperator = Ambigious [ClosingDelimiter (DeHeading 1), NamedParameterAssignment] 
+  assignOperator = Ambigious (Set.fromList [
+    ClosingDelimiter (DeHeading 1), 
+    NamedParameterAssignment
+  ])
 
 
 word :: WikiTokenParser WikiToken
@@ -108,21 +118,21 @@ xml :: WikiTokenParser WikiToken
 xml = Xml <$> (closingTag <|> selfClosingTag <|> openingTag) where
 
   openingTag = try do 
-    string "<"
-    tagName <- wordString 
-    string ">"
+    string "<" *> skipSpaces
+    tagName <- wordString
+    skipSpaces *> string ">"
     pure (Opening tagName)
 
   closingTag = try do 
-    string "</"
+    string "</" *> skipSpaces
     tagName <- wordString
-    string ">"
+    skipSpaces *> string ">"
     pure (Closing tagName)
 
   selfClosingTag = try do 
-    string "<"
+    string "<" *> skipSpaces
     tagName <- wordString
-    string "/>"
+    skipSpaces *> string "/>"
     pure (SelfClosing tagName)
 
 --
@@ -145,7 +155,7 @@ onString a s = string s *> pure a
 --
 
 
-special = ["{", "}", "<", ">", "[", "]", "&", "''", "/"]
+special = ["{", "}", "<", ">", "[", "]", "&", "''", "/", "|"]
 
 
 punctuations = [".", "!", "?", ","]

@@ -1,18 +1,28 @@
-module Data.WikiText.Tokens where
+module Data.WikiText.Tokens (
+
+  Xml(..), 
+  WikiToken(..),
+  Punctuation(..),
+  Delimiter(..),
+  AmbigiousDelimiter(..)
+
+) where
 
 import Data.TextFormat
+import qualified Data.Set as Set
+import qualified Data.Map as Map
 
 
 data Xml
-  = Opening String
+  = Opening String -- (Map.Map String String)
   | Closing String
-  | SelfClosing String
-
+  | SelfClosing String -- (Map.Map String String)
 
 
 data WikiToken
   = Linebreak
   | Space
+  | Pipe
   | Xml Xml
   | Word String
   | Punctuation Punctuation
@@ -20,7 +30,7 @@ data WikiToken
   | ClosingDelimiter Delimiter
   | AmbigiousDelimiter AmbigiousDelimiter
   | NamedParameterAssignment
-  | Ambigious [WikiToken]
+  | Ambigious (Set.Set WikiToken)
 
 
 data Punctuation 
@@ -35,13 +45,11 @@ data Delimiter
   | DeXLink
   | DeTemp
   | DeTempPar
-  | DeXml String 
   | DeHeading Number
+
 
 data AmbigiousDelimiter
   = DeFormat TextFormat
-
-
 
 
 --
@@ -82,7 +90,6 @@ instance eqDelimiter :: Eq Delimiter where
   (==) DeXLink DeXLink = true
   (==) DeTemp DeTemp = true
   (==) DeTempPar DeTempPar = true
-  (==) (DeXml a) (DeXml b) = a == b 
   (==) (DeHeading a) (DeHeading b) = a == b
   (==) _ _ = false
 
@@ -127,7 +134,6 @@ instance showDelimiter :: Show Delimiter where
   show DeXLink = "DeXLink"
   show DeTemp = "DeTemp"
   show DeTempPar = "DeTempPar"
-  show (DeXml t) = "DeXml (" ++ show t ++ ")"
   show DeLink = "DeLink"
   show (DeHeading h) = "DeHeading (" ++ show h ++ ")"
 
@@ -147,5 +153,120 @@ instance showXml :: Show Xml where
   show (Closing n) = "Closing " ++ show n
   show (Opening n) = "Opening " ++ show n
   show (SelfClosing n) = "SelfClosing " ++ show n
+
+
+--
+-- -- todo newtype wrap this
+--
+instance ordWikiText :: Ord WikiToken where
+  compare Linebreak other = case other of
+    Linebreak -> EQ
+    _ -> GT
+  compare Space other = case other of
+    Linebreak -> LT
+    Space -> EQ
+    _ -> GT
+  compare Pipe other = case other of
+    Linebreak -> LT
+    Space -> LT
+    Pipe -> EQ
+    _ -> GT
+  compare (Xml xml) other = case other of
+    Linebreak -> LT
+    Space -> LT
+    Pipe -> LT
+    Xml otherXml -> case [xml, otherXml] of
+      [Opening a, Opening b] -> a `compare` b
+      [Opening _, _        ] -> GT
+      [Closing a, Opening b] -> LT
+      [Closing a, Closing b] -> a `compare` b
+      [Closing _, _        ] -> GT
+      [SelfClosing a, _    ] -> LT
+      [SelfClosing a, SelfClosing b] -> a `compare` b
+    _ -> GT
+  compare (Word word) other = case other of
+    Linebreak -> LT
+    Space -> LT
+    Pipe -> LT
+    Xml _ -> LT
+    Word otherWord -> word `compare` otherWord
+    _ -> GT
+  compare (Punctuation p) other = case other of
+    Linebreak -> LT
+    Space -> LT
+    Pipe -> LT
+    Xml _ -> LT 
+    Word _ -> LT
+    Punctuation otherP -> case [p, otherP] of
+      [PPeroid, PPeroid] -> EQ
+      [PPeroid, _      ] -> GT
+      [PExclaim, PPeroid] -> LT
+      [PExclaim, PExclaim] -> EQ
+      [PExclaim, _       ] -> GT
+      [PQuestion, PPeroid] -> LT
+      [PQuestion, PExclaim] -> LT
+      [PQuestion, PQuestion] -> EQ
+      [PQuestion, _        ] -> GT 
+      [PComma, PComma] -> EQ 
+      [PComma, _     ] -> LT
+    _ -> GT
+  compare (OpeningDelimiter d) other = case other of
+    Ambigious _ -> GT
+    NamedParameterAssignment -> GT 
+    ClosingDelimiter _ -> GT
+    AmbigiousDelimiter _ -> GT
+    OpeningDelimiter otherD -> compareDelimiter d otherD
+    _ -> LT
+  compare (AmbigiousDelimiter d) other = case other of
+    Ambigious _ -> GT
+    NamedParameterAssignment -> GT 
+    ClosingDelimiter _ -> GT
+    AmbigiousDelimiter otherD -> case [d, otherD] of
+      [DeFormat Italic, DeFormat Italic] -> EQ
+      [DeFormat Italic, DeFormat _     ] -> GT
+      [DeFormat Bold, DeFormat Italic] -> LT
+      [DeFormat Bold, DeFormat Bold] -> EQ
+      [DeFormat Bold, DeFormat _] -> GT
+      [DeFormat Bold, DeFormat _] -> GT
+      [DeFormat ItalicBold, DeFormat ItalicBold] -> EQ
+      [DeFormat ItalicBold, DeFormat _         ] -> LT
+    _ -> LT
+  compare (ClosingDelimiter d) other = case other of
+    Ambigious _ -> GT
+    NamedParameterAssignment -> GT 
+    ClosingDelimiter otherD -> d `compareDelimiter` otherD
+  compare NamedParameterAssignment other = case other of
+    Ambigious _ -> GT 
+    NamedParameterAssignment -> EQ
+    _ -> LT
+  --
+  -- TODO reimplement once a instance is available
+  --
+  -- compare (Ambigious a) other = case other of
+  --   Ambigious otherA -> a `compare` otherA
+  --   _ -> LT
+
+compareDelimiter :: Delimiter -> Delimiter -> Ordering
+compareDelimiter a b = case a of
+  DeLink -> case b of
+    DeLink -> EQ
+    _      -> GT
+  DeXLink -> case b of
+    DeLink -> LT
+    DeXLink -> EQ
+    _      -> GT
+  DeTemp -> case b of
+    DeLink -> LT
+    DeXLink -> LT
+    DeTemp -> EQ
+    _ -> GT
+  DeTempPar -> case b of
+    DeHeading _ -> GT
+    DeTempPar -> EQ
+    _         -> LT
+  DeHeading ah -> case b of
+    DeHeading bh -> ah `compare` bh
+    _            -> LT
+
 
 
