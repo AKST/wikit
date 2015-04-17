@@ -124,10 +124,10 @@ tests = do
 
         it "{{hello|world}}" do
           result <- Test.parseOrFail Parser.wikitext "{{hello|world}}"
-          Template "hello" [PlainArg (PlainText "world")] @=? result 
+          Template "hello" [PlainArg [PlainText "world"]] @=? result 
 
         it "{{hello|to=world}}" do
           result <- Test.parseOrFail Parser.wikitext "{{hello|to=world}}"
-          Template "hello" [NamedArg "to" (PlainText "world")] @=? result 
+          Template "hello" [NamedArg "to" [PlainText "world"]] @=? result 
 
 

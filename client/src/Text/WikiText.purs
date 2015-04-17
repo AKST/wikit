@@ -83,8 +83,11 @@ template = do
   where
 
     parseArg = (try named) <|> plain where
-      named = NamedArg <$> anyStringTill (string "=") <*> bodyText
-      plain = PlainArg <$> bodyText
+      body = manyTill bodyText eof
+
+      named = NamedArg <$> anyStringTill (string "=") <*> body
+      plain = PlainArg <$> body
+
 
 
 --

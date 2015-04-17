@@ -43,8 +43,8 @@ data MediaType
 
 
 data TemplateArg 
-  = PlainArg BodyText
-  | NamedArg String BodyText 
+  = PlainArg [BodyText]
+  | NamedArg String [BodyText] 
   
 
 data WikiParameter
