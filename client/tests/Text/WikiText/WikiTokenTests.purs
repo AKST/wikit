@@ -108,3 +108,16 @@ tests = do
           OpeningDelimiter (DeHeading 1)
         ] @=? result
 
+    describe "xml" do
+      it "<ref>hello</ref>" do
+        result <- Test.parseOrFail Parser.tokens "<ref>hello</ref>"
+        [
+          Xml (Opening "ref"),
+          Word "hello",
+          Xml (Closing "ref")
+        ] @=? result
+        
+      it "<ref/>" do
+        result <- Test.parseOrFail Parser.tokens "<ref/>"
+        [Xml (SelfClosing "ref")] @=? result
+

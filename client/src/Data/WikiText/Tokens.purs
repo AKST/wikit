@@ -2,9 +2,18 @@ module Data.WikiText.Tokens where
 
 import Data.TextFormat
 
+
+data Xml
+  = Opening String
+  | Closing String
+  | SelfClosing String
+
+
+
 data WikiToken
   = Linebreak
   | Space
+  | Xml Xml
   | Word String
   | Punctuation Punctuation
   | OpeningDelimiter Delimiter
@@ -52,6 +61,7 @@ instance eqWikiToken :: Eq WikiToken where
   (==) Space Space = true
   (==) NamedParameterAssignment NamedParameterAssignment = true
   (==) (Ambigious a) (Ambigious b) = a == b
+  (==) (Xml a) (Xml b) = a == b
   (==) _ _ = false
   
 
@@ -62,7 +72,6 @@ instance eqPunctuation :: Eq Punctuation where
   (==) PExclaim PExclaim = true
   (==) PComma PComma = true
   (==) PQuestion PQuestion = true
-
   (==) _ _ = false
 
 
@@ -85,6 +94,16 @@ instance eqAmbigiousDelimiter :: Eq AmbigiousDelimiter where
   (==) _ _ = false
 
 
+instance eqXml :: Eq Xml where
+  (/=) a b = not (a == b)
+
+  (==) (Opening a) (Opening b) = a == b
+  (==) (Closing a) (Closing b) = a == b
+  (==) (SelfClosing a) (SelfClosing b) = a == b
+  (==) _ _ = false
+
+
+
 --
 -- Show
 --
@@ -99,6 +118,7 @@ instance showWikiToken :: Show WikiToken where
   show (AmbigiousDelimiter d) = "AmbigiousDelimiter (" ++ show d ++ ")"
   show NamedParameterAssignment = "NamedParameterAssignment"
   show (Ambigious as) = "Ambigious " ++ show as 
+  show (Xml t) = "Xml (" ++ show t ++ ")" 
   show Space = "Space"
 
 
@@ -121,4 +141,11 @@ instance showPunctuation :: Show Punctuation where
   show PExclaim = "PExclaim"
   show PComma = "PComma"
   show PQuestion = "PQuestion"
+
+
+instance showXml :: Show Xml where
+  show (Closing n) = "Closing " ++ show n
+  show (Opening n) = "Opening " ++ show n
+  show (SelfClosing n) = "SelfClosing " ++ show n
+
 

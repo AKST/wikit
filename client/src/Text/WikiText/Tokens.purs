@@ -33,6 +33,7 @@ tokens = (wikitoken <?> "wikitoken") `manyTill` eof
 
 wikitoken :: WikiTokenParser WikiToken
 wikitoken = space
+        <|> xml
         <|> punctuation
         <|> delimiter
         <|> linebreak 
@@ -54,9 +55,7 @@ ambigious = assignOperator `onString` "=" where
 
 
 word :: WikiTokenParser WikiToken
-word = Word <$> (concat <$> char `manyTill` delimiter) where
-  delimiter    = lookAhead (specialChars *> pure unit) <|> eof
-  specialChars = oneOf (whitespace ++ special ++ punctuations) <?> "valid word char"
+word = Word <$> wordString
 
 
 punctuation :: WikiTokenParser WikiToken
@@ -105,12 +104,36 @@ delimiter = (OpeningDelimiter <$> opening)
           <|> DeFormat Italic `onString` "''"
 
 
+xml :: WikiTokenParser WikiToken
+xml = Xml <$> (closingTag <|> selfClosingTag <|> openingTag) where
 
+  openingTag = try do 
+    string "<"
+    tagName <- wordString 
+    string ">"
+    pure (Opening tagName)
 
+  closingTag = try do 
+    string "</"
+    tagName <- wordString
+    string ">"
+    pure (Closing tagName)
+
+  selfClosingTag = try do 
+    string "<"
+    tagName <- wordString
+    string "/>"
+    pure (SelfClosing tagName)
 
 --
 -- Utility
 --
+
+
+wordString :: Parser String String 
+wordString = concat <$> char `manyTill` delimiter where
+  delimiter    = lookAhead (specialChars *> pure unit) <|> eof
+  specialChars = oneOf (whitespace ++ special ++ punctuations)
 
 
 onString :: forall a. a -> String -> Parser String a
@@ -122,7 +145,7 @@ onString a s = string s *> pure a
 --
 
 
-special = ["{", "}", "<", ">", "[", "]", "&", "''"]
+special = ["{", "}", "<", ">", "[", "]", "&", "''", "/"]
 
 
 punctuations = [".", "!", "?", ","]
