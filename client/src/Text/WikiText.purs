@@ -20,6 +20,7 @@ import Data.Monoid
 import Data.WikiText
 import Data.Maybe
 import Data.Either
+import qualified Data.Traversable as Traversable
 -- import Data.Identity
 
 import Text.Parsing.Parser
@@ -40,6 +41,7 @@ article = manyTill wikitext eof
 wikitext :: WikiTextParser WikiText
 wikitext = 
   (atStartOfLine <?> "at start of line") <|> 
+  (template <?> "template") <|>
   (try mediaLink <?> "media link") <|> 
   ((Text <$> bodyText) <?> "body text")
 
@@ -66,6 +68,26 @@ linebreak = pure LineBreak
 
 
 --
+-- Templates
+--
+template :: WikiTextParser WikiText
+template = do
+  body <- string "{{" *> anyStringTill (string "}}")
+
+  case splitStart (String.split "|" body) of 
+    Nothing -> fail "empty template"
+    Just { head: name, tail: args } -> do
+      args <- Traversable.sequence (withParser parseArg <$> args)
+      pure (Template name args)
+
+  where
+
+    parseArg = (try named) <|> plain where
+      named = NamedArg <$> anyStringTill (string "=") <*> bodyText
+      plain = PlainArg <$> bodyText
+
+
+--
 -- parses media items
 --
 mediaLink :: WikiTextParser WikiText
@@ -74,7 +96,8 @@ mediaLink = do
 
   mediaType <- mediaTypes <* string ":" 
   mediaLink <- anyStringTill (string "|")
-  mediaMeta <- anyStringTillExceptBefore "[[" "]]"
+  mediaMeta <- anyStringTillExceptBefore "[[" "]]" 
+    <?> "mediaLink closing delimiter"
 
   case splitEnd (String.split "|" mediaMeta) of
     Nothing -> fail ("couldn't split media info for " ++ show mediaMeta)
@@ -184,6 +207,8 @@ leftDelimiter = lookAhead (choice [
   vstring "|",
   vstring "[[[",
   vstring "]]]",
+  vstring "{{",
+  vstring "}}",
   vstring "[[",
   vstring "]]",
   vstring "'''''",
@@ -196,20 +221,12 @@ leftDelimiter = lookAhead (choice [
   
 -- Utility
 
-type EndSplit a b = { init :: [a], last :: b }  
 
 
 withParser :: forall s a. Parser s a -> s -> Parser s a
 withParser parser input = case runParser input parser of
   Left (ParseError error) -> fail error.message
   Right result -> pure result
-
-
-splitEnd :: forall a. [a] -> Maybe (EndSplit a a)
-splitEnd list = do
-  init <- Array.init list
-  last <- Array.last list
-  pure { init: init, last: last }
 
 
 onString :: forall a. String -> a -> Parser String a
@@ -242,7 +259,7 @@ anyStringTillExceptBefore except end = impl 0 mempty where
 
   impl :: Number -> String -> Parser String String
   impl n acc = do
-    content <- anyStringTill (string end)
+    content <- anyStringTill (string end) 
     case exceptions content of 
       count
         | count > 0 -> impl (n + count - 1) (acc ++ content ++ end)
@@ -254,4 +271,28 @@ concat :: forall m. (Monoid m) => [m] -> m
 concat elems = impl mempty elems where
 	impl acc (x:xs) = impl (acc <> x) xs
 	impl acc [    ] = acc
+
+
+--
+--
+--
+
+
+type EndSplit a = { init :: [a], last :: a }  
+type StartSplit a = { head :: a, tail :: [a] }  
+
+
+splitEnd :: forall a. [a] -> Maybe (EndSplit a)
+splitEnd list = do
+  init <- Array.init list
+  last <- Array.last list
+  pure { init: init, last: last }
+
+
+splitStart :: forall a. [a] -> Maybe (StartSplit a)
+splitStart list = do
+  head <- Array.head list
+  tail <- Array.tail list
+  pure { head: head, tail: tail }
+
 

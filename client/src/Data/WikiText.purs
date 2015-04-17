@@ -14,7 +14,7 @@ data WikiText
   -- -- {{ curly syntax }}
   -- --
   -- | Variable { name :: String }
-  -- | Template WikiTemplate
+  | Template String [TemplateArg]
   -- | Parameter WikiParameter
 
   -- --
@@ -42,9 +42,9 @@ data MediaType
   = File
 
 
-data WikiTemplate 
-  = NormalTemplate { name :: String, text :: String }
-  | ParamTemplate { name :: String, param :: String, fallback :: String }
+data TemplateArg 
+  = PlainArg BodyText
+  | NamedArg String BodyText 
   
 
 data WikiParameter
@@ -62,8 +62,8 @@ instance eqWikiText :: Eq WikiText where
   (==) (Text t1) (Text t2) = t1 == t2
   (==) (Heading s1 b1) (Heading s2 b2) = s1 == s2 && b1 == b2
   (==) (Media mt1 u1 i1 t1) (Media mt2 u2 i2 t2) = mt1 == mt1 && u1 == u2 && t1 == t2 && i1 == i2
+  (==) (Template n1 a1) (Template n2 a2) = n1 == n2 && a1 == a2
   -- (==) (Variable { name: n1 }) (Variable { name: n2 }) = n1 == n2
-  -- (==) (Template template1)    (Template template2)    = template1 == template2
   -- (==) (Parameter param1)      (Parameter param2)      = param1 == param2
   -- (==) (Comment { body: b1 })  (Comment { body: b2 })  = b1 == b2
   -- (==) (NoWiki { body: b1 })   (NoWiki { body: b2 })   = b1 == b2
@@ -84,13 +84,12 @@ instance eqLinkType :: Eq LinkType where
   (==) External External = true 
   (==) _ _ = false
 
-instance eqWikiTemplate :: Eq WikiTemplate where 
+
+instance eqWikiTemplateArg :: Eq TemplateArg where 
   (/=) l r = not (l == r)
 
-  (==) (NormalTemplate { name: n1, text: t1 }) (NormalTemplate { name: n2, text: t2 }) =
-    n1 == n2 && t1 == t2
-  (==) (ParamTemplate { name: n1, param: p1 }) (ParamTemplate { name: n2, param: p2 }) =
-    n1 == n2 && p1 == p2
+  (==) (PlainArg n1) (PlainArg n2)       = n1 == n2
+  (==) (NamedArg n1 p1) (NamedArg n2 p2) = n1 == n2 && p1 == p2
 
   (==) _ _ = false
 
@@ -122,6 +121,7 @@ instance showWikiText :: Show WikiText where
   show (Media mt u i t) = "Media " 
     ++ show mt ++ " " ++ show u ++ " " 
     ++ show i ++ " " ++ show t
+  show (Template n args) = "Template " ++ show n ++ " " ++ show args
 
   -- show (Variable { name: name })          = "Variable { name: " ++ show name ++ " }"
   -- show (Template template)                = "Template (" ++ show template ++ ")"
@@ -140,9 +140,9 @@ instance showLinkType :: Show LinkType where
   show External = "External"
   show Internal = "Internal"
 
-instance showWikiTemplate :: Show WikiTemplate where 
-  show (NormalTemplate { name: n, text: t }) = "NormalTemplate { name: " ++ show n ++ ", text: " ++ show t ++ "})"
-  show (ParamTemplate { name: n, param: p }) = "ParamTemplate { name: " ++ show n ++ ", param: " ++ show p ++ "})"
+instance showWikiTemplateArg :: Show TemplateArg where 
+  show (PlainArg n) = "PlainArg " ++ show n
+  show (NamedArg n p) = "NamedArg " ++ show n ++ " " ++ show p
 
 instance showWikiParameter :: Show WikiParameter where
   show (TextParameter { name: n, text: t }) = "TextParameter { name: " ++ show n ++ ", text: " ++ show t ++ "}"

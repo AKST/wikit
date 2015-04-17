@@ -84,6 +84,7 @@ tests = do
             PlainText "Early 20th century chair"
           ] @=? result
 
+
       describe "Line Breaks" do
         it "\\n" do
           result <- Test.parseOrFail Parser.wikitext "\n"
@@ -115,4 +116,18 @@ tests = do
           result <- Test.parseOrFail Parser.wikitext "\n======hello======"
           Heading 6 "hello" @=? result
       
+
+      describe "Template" do
+        it "{{hello_world}}" do
+          result <- Test.parseOrFail Parser.wikitext "{{hello_world}}"
+          Template "hello_world" [] @=? result
+
+        it "{{hello|world}}" do
+          result <- Test.parseOrFail Parser.wikitext "{{hello|world}}"
+          Template "hello" [PlainArg (PlainText "world")] @=? result 
+
+        it "{{hello|to=world}}" do
+          result <- Test.parseOrFail Parser.wikitext "{{hello|to=world}}"
+          Template "hello" [NamedArg "to" (PlainText "world")] @=? result 
+
 
