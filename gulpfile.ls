@@ -109,6 +109,7 @@ gulp.task \js-libs ->
 gulp.task \ps-src-build ->
   gulp.src ps-source
     .pipe purescript.psc do
+      browserNamespace: 'Wikit'
       output: app-out-name
       main: \Main
     .on \error (err) !->
@@ -178,6 +179,8 @@ gulp.task \test <[js-test-build]> ->
   gulp.src './public/tests.html'
     .pipe mocha-phantom-js do
       reporter: 'spec'
+      mocha: 
+        slow: 75
 
 
 ########################################################

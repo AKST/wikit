@@ -1,6 +1,8 @@
 
 module Text.WikiText.TokenTests (tests) where
 
+import Control.Monad.Eff
+
 import Test.Mocha
 import Test.Assert.Simple
 
@@ -13,6 +15,11 @@ import qualified Data.Map as Map
 import qualified Text.WikiText.Tokens as Parser
 import qualified TestCommon as Test
 
+
+tokens :: String -> Eff _ [WikiToken]
+tokens = Test.parseOrFail Parser.tokens
+
+
 --
 -- Spec:
 --   http://www.mediawiki.org/wiki/Markup_spec
@@ -21,52 +28,52 @@ tests = do
   describe "Text.WikiText.Tokens" do
     describe "whitespace" do
       it " " do
-        result <- Test.parseOrFail Parser.tokens " " 
-        [Space] @=? result
+        result <- tokens " " 
+        result @?= [Space]
 
       it "  " do
-        result <- Test.parseOrFail Parser.tokens "  "
-        [Space, Space] @=? result
+        result <- tokens "  "
+        result @?= [Space, Space]
 
     describe "linebreaks" do
       it "\\n" do
-        result <- Test.parseOrFail Parser.tokens "\n"
-        [Linebreak] @=? result
+        result <- tokens "\n"
+        result @?= [Linebreak]
 
     describe "words" do
       it "hello world" do
-        result <- Test.parseOrFail Parser.tokens "hello world"
-        [Word "hello", Space, Word "world"] @=? result
+        result <- tokens "hello world"
+        result @?= [Word "hello", Space, Word "world"]
 
     describe "punctuation" $ do
       it "." do
-        result <- Test.parseOrFail Parser.tokens "."
-        [Punctuation PPeroid] @=? result
+        result <- tokens "."
+        result @?= [Punctuation PPeroid]
 
       it "hello, world!" do
-        result <- Test.parseOrFail Parser.tokens "hello, world!"
-        [
+        result <- tokens "hello, world!"
+        result @?= [
           Word "hello", 
           Punctuation PComma, 
           Space, 
           Word "world", 
           Punctuation PExclaim
-        ] @=? result
+        ]
 
     describe "delimters" do
       it "'' ''' '''''" do
-        result <- Test.parseOrFail Parser.tokens "'' ''' '''''"
-        [
+        result <- tokens "'' ''' '''''"
+        result @?= [
           AmbigiousDelimiter (DeFormat Italic),
           Space, 
           AmbigiousDelimiter (DeFormat Bold),
           Space, 
           AmbigiousDelimiter (DeFormat ItalicBold)
-        ] @=? result
+        ]
 
       it "[[[ [[ {{{ {{" do
-        result <- Test.parseOrFail Parser.tokens "[[[ [[ {{{ {{"
-        [
+        result <- tokens "[[[ [[ {{{ {{"
+        result @?= [
           OpeningDelimiter DeXLink,
           Space,
           OpeningDelimiter DeLink,
@@ -74,11 +81,11 @@ tests = do
           OpeningDelimiter DeTempPar,
           Space,
           OpeningDelimiter DeTemp
-        ] @=? result
+        ]
 
       it "====== ===== ==== === == =" do
-        result <- Test.parseOrFail Parser.tokens "====== ===== ==== === == ="
-        [
+        result <- tokens "====== ===== ==== === == ="
+        result @?= [
           ClosingDelimiter (DeHeading 6),
           Space,
           ClosingDelimiter (DeHeading 5),
@@ -93,11 +100,11 @@ tests = do
             ClosingDelimiter (DeHeading 1), 
             NamedParameterAssignment
           ])
-        ] @=? result
+        ]
 
       it "\\n====== \\n===== \\n==== \\n=== \\n== \\n=" do
-        result <- Test.parseOrFail Parser.tokens "\n====== \n===== \n==== \n=== \n== \n="
-        [
+        result <- tokens "\n====== \n===== \n==== \n=== \n== \n="
+        result @?= [
           OpeningDelimiter (DeHeading 6),
           Space,
           OpeningDelimiter (DeHeading 5),
@@ -109,37 +116,43 @@ tests = do
           OpeningDelimiter (DeHeading 2),
           Space,
           OpeningDelimiter (DeHeading 1)
-        ] @=? result
+        ]
 
     describe "xml" do
       it "<ref>hello</ref>" do
-        result <- Test.parseOrFail Parser.tokens "<ref>hello</ref>"
-        [
+        result <- tokens "<ref>hello</ref>"
+        result @?= [
           Xml (Opening "ref" (Map.fromList [])),
           Word "hello",
           Xml (Closing "ref")
-        ] @=? result
+        ]
         
       it "<ref/>" do
-        result <- Test.parseOrFail Parser.tokens "<ref/>"
-        [Xml (SelfClosing "ref" (Map.fromList []))] @=? result
+        result <- tokens "<ref/>"
+        result @?= [Xml (SelfClosing "ref" (Map.fromList []))]
 
       it "<ref />" do
-        result <- Test.parseOrFail Parser.tokens "<ref />"
-        [Xml (SelfClosing "ref" (Map.fromList []))] @=? result
+        result <- tokens "<ref />"
+        result @?= [Xml (SelfClosing "ref" (Map.fromList []))]
 
 
       it "< ref ></ ref >" do
-        result <- Test.parseOrFail Parser.tokens "< ref ></ ref >"
-        [Xml (Opening "ref" (Map.fromList [])), Xml (Closing "ref")] @=? result
+        result <- tokens "< ref ></ ref >"
+        result @?= [Xml (Opening "ref" (Map.fromList [])), Xml (Closing "ref")]
 
 
       it "<ref name=\"john\"></ref>" do
-        result <- Test.parseOrFail Parser.tokens "<ref name=\"john\"></ref>"
-        [
+        result <- tokens "<ref name=\"john\"></ref>"
+        result @?= [
           Xml (Opening "ref" (Map.fromList [
             Tuple "name" "john"
           ])),
           Xml (Closing "ref")
-        ] @=? result
+        ]
+
+      it "<ref name=\"john\"></ref>" do
+        result <- tokens "<ref name=\"john\"/>"
+        result @?= [Xml (SelfClosing "ref" (Map.fromList [
+          Tuple "name" "john"
+        ]))]
 
