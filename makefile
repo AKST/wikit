@@ -16,14 +16,20 @@ endef
 build: build-client build-server
 
 build-client:
-	${GULP} js-src-build html scss 3rd-party-css icons
+	${GULP} js-src-build js-src-offline-build html scss 3rd-party-css icons manifest
 
 build-server:
 	cabal build wikit
 	cabal build wikit-tests
 
-watch-client: 
+watch-client:
 	${GULP} watch
+
+watch-client-test:
+	${GULP} watch-test
+
+watch-client-offline:
+	${GULP} watch-offline
 
 watch-server:
 	${WATCH} make test

@@ -19,6 +19,9 @@ require! {
 app-out-name = \compiled-purescript.js
 
 
+offline-app-out-name = \compiled-offline-purescript.js
+
+
 test-out-name = \compiled-test-purescript.js
 
 
@@ -50,6 +53,10 @@ temp-test-js =
   * './bower_components/mocha/mocha.js'
   * './bower_components/chai/chai.js'
   * 'temp/compiled-test-purescript.js'
+
+temp-src-offline-js =
+  * 'temp/jslibs.js'
+  * 'temp/compiled-offline-purescript.js'
 
 
 js-libs = 
@@ -89,6 +96,12 @@ gulp.task \js-src-build <[js-libs ps-src-build]> ->
     .pipe gulp.dest 'public/scripts'
 
 
+gulp.task \js-src-offline-build <[js-libs ps-src-offline-build]> ->
+  gulp.src temp-src-offline-js
+    .pipe concat \offline.js
+    .pipe gulp.dest 'public/scripts'
+
+
 gulp.task \js-test-build <[js-libs ps-test-build]> ->
   gulp.src temp-test-js
     .pipe concat \tests.js
@@ -112,6 +125,18 @@ gulp.task \ps-src-build ->
       browserNamespace: 'Wikit'
       output: app-out-name
       main: \Main
+    .on \error (err) !->
+      console.error err.message ? err
+    .pipe gulp.dest \temp
+    .pipe livereload()
+
+
+gulp.task \ps-src-offline-build ->
+  gulp.src ps-source
+    .pipe purescript.psc do
+      browserNamespace: 'Wikit'
+      output: offline-app-out-name
+      main: \Offline
     .on \error (err) !->
       console.error err.message ? err
     .pipe gulp.dest \temp
@@ -147,6 +172,13 @@ gulp.task \scss ->
 
 gulp.task \html ->
   gulp.src html-source
+    .pipe mustache do
+      is-production: process.env.ENV == 'PROD'
+    .pipe gulp.dest './public/.'
+    .pipe livereload()
+
+gulp.task \manifest ->
+  gulp.src './client/manifest.cache'
     .pipe mustache do
       is-production: process.env.ENV == 'PROD'
     .pipe gulp.dest './public/.'
@@ -188,10 +220,23 @@ gulp.task \test <[js-test-build]> ->
 ########################################################
 
 
-gulp.task \watch <[js-src-build html scss 3rd-party-css icons]> !->
+gulp.task \watch <[js-src-build html scss 3rd-party-css icons manifest]> !->
   livereload.listen { port: 12345, base-path: 'public' }
-  gulp.watch client-src, <[js-src-build test]>
+  gulp.watch client-src, <[js-src-build]>
   gulp.watch html-source, [\html]
   gulp.watch scss-source, [\scss]
+
+
+gulp.task \watch-test <[js-src-build html scss 3rd-party-css icons manifest]> !->
+  livereload.listen { port: 12345, base-path: 'public' }
+  gulp.watch client-src, <[test]>
+
+
+gulp.task \watch-offline-build <[js-src-offline-build html scss 3rd-party-css icons manifest]> !->
+  livereload.listen { port: 12345, base-path: 'public' }
+  gulp.watch client-src, <[js-src-offline-build test]>
+  gulp.watch html-source, [\html]
+  gulp.watch scss-source, [\scss]
+
 
 
