@@ -86,36 +86,20 @@ tests = do
       it "====== ===== ==== === == =" do
         result <- tokens "====== ===== ==== === == ="
         result @?= [
-          ClosingDelimiter (DeHeading 6),
+          AmbigiousDelimiter (DeHeading 6), 
           Space,
-          ClosingDelimiter (DeHeading 5),
+          AmbigiousDelimiter (DeHeading 5), 
           Space,
-          ClosingDelimiter (DeHeading 4),
+          AmbigiousDelimiter (DeHeading 4), 
           Space,
-          ClosingDelimiter (DeHeading 3),
+          AmbigiousDelimiter (DeHeading 3), 
           Space,
-          ClosingDelimiter (DeHeading 2),
+          AmbigiousDelimiter (DeHeading 2), 
           Space,
-          Ambigious (Set.fromList [
-            ClosingDelimiter (DeHeading 1), 
+          Ambigious [
+            AmbigiousDelimiter (DeHeading 1), 
             NamedParameterAssignment
-          ])
-        ]
-
-      it "\\n====== \\n===== \\n==== \\n=== \\n== \\n=" do
-        result <- tokens "\n====== \n===== \n==== \n=== \n== \n="
-        result @?= [
-          OpeningDelimiter (DeHeading 6),
-          Space,
-          OpeningDelimiter (DeHeading 5),
-          Space,
-          OpeningDelimiter (DeHeading 4),
-          Space,
-          OpeningDelimiter (DeHeading 3),
-          Space,
-          OpeningDelimiter (DeHeading 2),
-          Space,
-          OpeningDelimiter (DeHeading 1)
+          ]
         ]
 
     describe "xml" do

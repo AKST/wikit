@@ -9,18 +9,18 @@ import qualified Control.Monad.JQuery as J
 
 import qualified Data.RevisionTest as Data.RevisionTest 
 import qualified Data.APITests as Data.APITests
-import qualified Text.WikiTextTests as Text.WikiTextTests
 import qualified Text.WikiText.TokenTests as Text.WikiText.TokenTests
+import qualified Text.WikiText.ParserTests as Text.WikiText.ParserTests
 import qualified Text.DateTests as Text.DateTests
 
 
 main = J.ready do
   initMocha
-  Text.WikiTextTests.tests
-  Text.WikiText.TokenTests.tests
   Text.DateTests.tests
   Data.RevisionTest.tests
   Data.APITests.tests
+  Text.WikiText.TokenTests.tests
+  Text.WikiText.ParserTests.tests
   runMocha
 
 

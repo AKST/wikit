@@ -30,7 +30,7 @@ data WikiToken
   | ClosingDelimiter Delimiter
   | AmbigiousDelimiter AmbigiousDelimiter
   | NamedParameterAssignment
-  | Ambigious (Set.Set WikiToken)
+  | Ambigious [WikiToken]
 
 
 data Punctuation 
@@ -45,11 +45,11 @@ data Delimiter
   | DeXLink
   | DeTemp
   | DeTempPar
-  | DeHeading Number
 
 
 data AmbigiousDelimiter
   = DeFormat TextFormat
+  | DeHeading Number
 
 
 --
@@ -90,7 +90,6 @@ instance eqDelimiter :: Eq Delimiter where
   (==) DeXLink DeXLink = true
   (==) DeTemp DeTemp = true
   (==) DeTempPar DeTempPar = true
-  (==) (DeHeading a) (DeHeading b) = a == b
   (==) _ _ = false
 
 
@@ -98,6 +97,7 @@ instance eqAmbigiousDelimiter :: Eq AmbigiousDelimiter where
   (/=) a b = not (a == b)
   
   (==) (DeFormat a) (DeFormat b) = a == b
+  (==) (DeHeading a) (DeHeading b) = a == b
   (==) _ _ = false
 
 
@@ -135,11 +135,11 @@ instance showDelimiter :: Show Delimiter where
   show DeTemp = "DeTemp"
   show DeTempPar = "DeTempPar"
   show DeLink = "DeLink"
-  show (DeHeading h) = "DeHeading (" ++ show h ++ ")"
 
 
 instance showAmbigiousDelimiter :: Show AmbigiousDelimiter where
   show (DeFormat f) = "DeFormat (" ++ show f ++ ")"
+  show (DeHeading h) = "DeHeading (" ++ show h ++ ")"
 
 
 instance showPunctuation :: Show Punctuation where
@@ -233,6 +233,9 @@ instance ordWikiText :: Ord WikiToken where
       [DeFormat Bold, DeFormat _] -> GT
       [DeFormat ItalicBold, DeFormat ItalicBold] -> EQ
       [DeFormat ItalicBold, DeFormat _         ] -> LT
+      [DeFormat _, DeHeading _] -> GT
+      [DeHeading _, DeFormat _] -> LT
+      [DeHeading a, DeHeading b] -> a `compare` b
     _ -> LT
   compare (ClosingDelimiter d) other = case other of
     Ambigious _ -> GT
@@ -245,9 +248,9 @@ instance ordWikiText :: Ord WikiToken where
   --
   -- TODO reimplement once a instance is available
   --
-  -- compare (Ambigious a) other = case other of
-  --   Ambigious otherA -> a `compare` otherA
-  --   _ -> LT
+  compare (Ambigious a) other = case other of
+    Ambigious otherA -> a `compare` otherA
+    _ -> LT
 
 compareDelimiter :: Delimiter -> Delimiter -> Ordering
 compareDelimiter a b = case a of
@@ -264,12 +267,8 @@ compareDelimiter a b = case a of
     DeTemp -> EQ
     _ -> GT
   DeTempPar -> case b of
-    DeHeading _ -> GT
     DeTempPar -> EQ
     _         -> LT
-  DeHeading ah -> case b of
-    DeHeading bh -> ah `compare` bh
-    _            -> LT
 
 
 

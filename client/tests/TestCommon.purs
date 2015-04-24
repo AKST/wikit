@@ -32,6 +32,12 @@ decodeOrFail string = do
     Either.Left msg -> throwException msg
 
 
+rightOrFail :: forall e a eff. (Show e) => Either.Either e a -> Eff eff a
+rightOrFail either = case either of
+  Either.Right r  -> pure r
+  Either.Left err -> throwException (show err) 
+
+
 fromMaybe :: forall e a. String -> Maybe.Maybe a -> Eff e a
 fromMaybe _ (Maybe.Just a) = pure a
 fromMaybe m _              = throwException m

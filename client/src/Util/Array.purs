@@ -23,3 +23,10 @@ splitStart list = do
   pure { head: head, tail: tail }
 
 
+any :: forall a. (a -> Boolean) -> [a] -> Boolean
+any p [] = false
+any p (x:xs) 
+  | p x       = true
+  | otherwise = any p xs
+
+

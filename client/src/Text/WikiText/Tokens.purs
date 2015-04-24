@@ -60,10 +60,10 @@ pipe = Pipe `onString` "|" <?> "pipe"
 
 ambigious :: WikiTokenParser WikiToken
 ambigious = assignOperator `onString` "=" where
-  assignOperator = Ambigious (Set.fromList [
-    ClosingDelimiter (DeHeading 1), 
+  assignOperator = Ambigious [
+    AmbigiousDelimiter (DeHeading 1), 
     NamedParameterAssignment
-  ])
+  ]
 
 
 word :: WikiTokenParser WikiToken
@@ -88,23 +88,14 @@ delimiter = (OpeningDelimiter <$> opening)
         <|> DeLink `onString` "[["
         <|> DeTempPar `onString` "{{{"
         <|> DeTemp `onString` "{{"
-        <|> DeHeading 6 `onString` "\n======"
-        <|> DeHeading 5 `onString` "\n====="
-        <|> DeHeading 4 `onString` "\n===="
-        <|> DeHeading 3 `onString` "\n==="
-        <|> DeHeading 2 `onString` "\n=="
-        <|> DeHeading 1 `onString` "\n="
+
 
   closing :: WikiTokenParser Delimiter
   closing = DeXLink `onString` "]]]"
         <|> DeLink `onString` "]]"
         <|> DeTempPar `onString` "}}}"
         <|> DeTemp `onString` "}}"
-        <|> DeHeading 6 `onString` "======"
-        <|> DeHeading 5 `onString` "====="
-        <|> DeHeading 4 `onString` "===="
-        <|> DeHeading 3 `onString` "==="
-        <|> DeHeading 2 `onString` "=="
+
 
   --
   -- Delimiters which by themselves are immediately obvious
@@ -114,6 +105,11 @@ delimiter = (OpeningDelimiter <$> opening)
   ambigious = DeFormat ItalicBold `onString` "'''''"
           <|> DeFormat Bold `onString` "'''"
           <|> DeFormat Italic `onString` "''"
+          <|> DeHeading 6 `onString` "======"
+          <|> DeHeading 5 `onString` "====="
+          <|> DeHeading 4 `onString` "===="
+          <|> DeHeading 3 `onString` "==="
+          <|> DeHeading 2 `onString` "=="
 
 
 xml :: WikiTokenParser WikiToken
