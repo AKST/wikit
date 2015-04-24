@@ -178,7 +178,7 @@ gulp.task \html ->
     .pipe livereload()
 
 gulp.task \manifest ->
-  gulp.src './client/manifest.cache'
+  gulp.src './client/*.appcache'
     .pipe mustache do
       is-production: process.env.ENV == 'PROD'
     .pipe gulp.dest './public/.'
@@ -225,6 +225,7 @@ gulp.task \watch <[js-src-build html scss 3rd-party-css icons manifest]> !->
   gulp.watch client-src, <[js-src-build]>
   gulp.watch html-source, [\html]
   gulp.watch scss-source, [\scss]
+  gulp.watch 'client/offline.appcache', [\manifest]
 
 
 gulp.task \watch-test <[js-src-build html scss 3rd-party-css icons manifest]> !->
@@ -237,6 +238,8 @@ gulp.task \watch-offline-build <[js-src-offline-build html scss 3rd-party-css ic
   gulp.watch client-src, <[js-src-offline-build test]>
   gulp.watch html-source, [\html]
   gulp.watch scss-source, [\scss]
+  gulp.watch 'client/offline.appcache', [\manifest]
+
 
 
 

@@ -1,0 +1,14 @@
+CACHE MANIFEST
+# 2015-4-20:v1
+#
+#
+scripts/offline.js
+style/skeleton.css
+style/app.css
+
+FALLBACK:
+/ offline.html
+
+NETWORK:
+*
+
