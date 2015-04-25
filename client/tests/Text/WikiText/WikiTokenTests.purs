@@ -29,26 +29,26 @@ tests = do
     describe "whitespace" do
       it " " do
         result <- tokens " " 
-        result @?= [Space]
+        result @?= [Space, EndOfInput]
 
       it "  " do
         result <- tokens "  "
-        result @?= [Space, Space]
+        result @?= [Space, Space, EndOfInput]
 
     describe "linebreaks" do
       it "\\n" do
         result <- tokens "\n"
-        result @?= [Linebreak]
+        result @?= [Linebreak, EndOfInput]
 
     describe "words" do
       it "hello world" do
         result <- tokens "hello world"
-        result @?= [Word "hello", Space, Word "world"]
+        result @?= [Word "hello", Space, Word "world", EndOfInput]
 
     describe "punctuation" $ do
       it "." do
         result <- tokens "."
-        result @?= [Punctuation PPeroid]
+        result @?= [Punctuation PPeroid, EndOfInput]
 
       it "hello, world!" do
         result <- tokens "hello, world!"
@@ -57,7 +57,8 @@ tests = do
           Punctuation PComma, 
           Space, 
           Word "world", 
-          Punctuation PExclaim
+          Punctuation PExclaim, 
+					EndOfInput
         ]
 
     describe "delimters" do
@@ -68,7 +69,8 @@ tests = do
           Space, 
           AmbigiousDelimiter (DeFormat Bold),
           Space, 
-          AmbigiousDelimiter (DeFormat ItalicBold)
+          AmbigiousDelimiter (DeFormat ItalicBold), 
+					EndOfInput
         ]
 
       it "[[[ [[ {{{ {{" do
@@ -80,7 +82,8 @@ tests = do
           Space,
           OpeningDelimiter DeTempPar,
           Space,
-          OpeningDelimiter DeTemp
+          OpeningDelimiter DeTemp, 
+					EndOfInput
         ]
 
       it "====== ===== ==== === == =" do
@@ -99,7 +102,8 @@ tests = do
           Ambigious [
             AmbigiousDelimiter (DeHeading 1), 
             NamedParameterAssignment
-          ]
+          ], 
+					EndOfInput
         ]
 
     describe "xml" do
@@ -108,21 +112,26 @@ tests = do
         result @?= [
           Xml (Opening "ref" (Map.fromList [])),
           Word "hello",
-          Xml (Closing "ref")
+          Xml (Closing "ref"), 
+					EndOfInput
         ]
         
       it "<ref/>" do
         result <- tokens "<ref/>"
-        result @?= [Xml (SelfClosing "ref" (Map.fromList []))]
+        result @?= [Xml (SelfClosing "ref" (Map.fromList [])), EndOfInput]
 
       it "<ref />" do
         result <- tokens "<ref />"
-        result @?= [Xml (SelfClosing "ref" (Map.fromList []))]
+        result @?= [Xml (SelfClosing "ref" (Map.fromList [])), EndOfInput]
 
 
       it "< ref ></ ref >" do
         result <- tokens "< ref ></ ref >"
-        result @?= [Xml (Opening "ref" (Map.fromList [])), Xml (Closing "ref")]
+        result @?= [
+					Xml (Opening "ref" (Map.fromList [])), 
+					Xml (Closing "ref"), 
+					EndOfInput
+				]
 
 
       it "<ref name=\"john\"></ref>" do
@@ -131,12 +140,16 @@ tests = do
           Xml (Opening "ref" (Map.fromList [
             Tuple "name" "john"
           ])),
-          Xml (Closing "ref")
+          Xml (Closing "ref"), 
+					EndOfInput
         ]
 
       it "<ref name=\"john\"></ref>" do
         result <- tokens "<ref name=\"john\"/>"
-        result @?= [Xml (SelfClosing "ref" (Map.fromList [
-          Tuple "name" "john"
-        ]))]
+        result @?= [
+					Xml (SelfClosing "ref" (Map.fromList [
+					  Tuple "name" "john"
+					])), 
+				  EndOfInput
+				]
 

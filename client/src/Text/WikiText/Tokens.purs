@@ -32,7 +32,8 @@ type WikiTokenParser a = Parser String a
 
 
 tokens :: WikiTokenParser [WikiToken]
-tokens = (wikitoken <?> "wikitoken") `manyTill` eof
+tokens = elems <++ [EndOfInput] where 
+	elems = ((wikitoken <?> "wikitoken") `manyTill` eof)
 
 
 wikitoken :: WikiTokenParser WikiToken

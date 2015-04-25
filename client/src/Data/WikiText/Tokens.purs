@@ -31,6 +31,7 @@ data WikiToken
   | AmbigiousDelimiter AmbigiousDelimiter
   | NamedParameterAssignment
   | Ambigious [WikiToken]
+  | EndOfInput
 
 
 data Punctuation 
@@ -70,6 +71,7 @@ instance eqWikiToken :: Eq WikiToken where
   (==) NamedParameterAssignment NamedParameterAssignment = true
   (==) (Ambigious a) (Ambigious b) = a == b
   (==) (Xml a) (Xml b) = a == b
+  (==) EndOfInput EndOfInput = true
   (==) _ _ = false
   
 
@@ -126,6 +128,7 @@ instance showWikiToken :: Show WikiToken where
   show NamedParameterAssignment = "NamedParameterAssignment"
   show (Ambigious as) = "Ambigious " ++ show as 
   show (Xml t) = "Xml (" ++ show t ++ ")" 
+  show EndOfInput = "EndOfInput"
   show Space = "Space"
 
 

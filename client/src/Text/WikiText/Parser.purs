@@ -3,7 +3,6 @@ module Text.WikiText.Parser where
 import Text.Parsing.Parser
 import Text.Parsing.Parser.Combinators
 import Text.Parsing.Parser.Expr
-import Text.Parsing.Parser.String
 import Text.Parsing.Parser.Token
 
 import Control.Apply
@@ -25,10 +24,14 @@ wikiText :: WikiTextParser [WikiText]
 wikiText = pure [] 
 
 
--- wikiText :: WikiTextParser WikiText
--- wikiText = heading
+-- syntax :: WikiTextParser WikiText
+-- syntax = paragraph
 -- 
 -- 
+-- paragraph :: WikiTextParser WikiText
+-- paragraph = Paragraph <$> anyText `manyTill` match EndOfInput 
+ 
+
 -- heading = do
 --   size <- getHeadingDelimiter  
 --   text <- textTillHeadingEndOf size 
@@ -40,7 +43,20 @@ wikiText = pure []
 --         _                                 -> empty 
 -- 
 --     textTillHeadingEndOf size = wikiText `endBy` (match (DeHeading size)) 
--- 
+
+
+--
+-- atoms
+--
+
+anyText :: WikiTextParser WikiAtom
+anyText = word
+
+
+word :: WikiTextParser WikiAtom
+word = tokenToSyntax <$> skipSpace (nextIs WordType) where
+  tokenToSyntax (Word text) = (WordAtom text)
+
 -- 
 -- -- 
 -- -- -- predicates
@@ -71,10 +87,14 @@ wikiText = pure []
 data TokenType
   = ODelimiterType 
   | ADelimiterType
+  | WordType
+  | SpaceType
 
 
 nextIs :: TokenType -> WikiTextParser WikiToken
 nextIs tokenType = token >>= matchType tokenType where 
+  matchType WordType token@(Word _) = pure token
+  matchType SpaceType token@(Space) = pure token
   matchType ODelimiterType token@(OpeningDelimiter _)   = pure token
   matchType ADelimiterType token@(AmbigiousDelimiter _) = pure token
   matchType _ (Ambigious choices) = firstMatch choices where 
@@ -82,10 +102,11 @@ nextIs tokenType = token >>= matchType tokenType where
     firstMatch []     = empty  
   matchType _ _ = empty
 
--- 
--- skipSpaces :: forall a. DocParser a -> DocParser a
--- skipSpaces parser = skipToken (\s -> s == Space) *> parser 
--- 
+ 
+skipSpace :: forall a. WikiTextParser a -> WikiTextParser a
+skipSpace parser = skipMany (nextIs SpaceType) *> parser 
+
+
 -- 
 -- -- low level methods
 -- 
@@ -100,16 +121,6 @@ nextIs tokenType = token >>= matchType tokenType where
 --         else do
 --           State.put (state { tokens = tokens })
 --           pure acc
--- 
--- 
--- skipToken :: (WikiToken -> Boolean) -> DocParser Unit 
--- skipToken predicate = lift State.get >>= impl where
---   impl state = withTokens state.tokens where
---     withTokens tokens = do
---       split <- nothingError (Intern RanOutOfTokens) (Array.splitStart tokens)
---       if predicate split.head
---         then withTokens split.tail 
---         else State.put (state { tokens = tokens })
 -- 
 -- 
 -- popToken :: DocParser WikiToken
