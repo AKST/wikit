@@ -7,15 +7,18 @@ about this project.
   - PS. I'm not against JS frameworks 
 - No CSS Framework, only css libraries
 - Uses cool HTML5 APIs
-  - Web Sockets
-  - SVG
-  - History API
-  - Local Storage
+  - [Web Sockets](https://developer.mozilla.org/en/docs/WebSockets)
+    - For fast revision retrivial 
+  - [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers)
+    - To speed up parsing
+  - [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
+    - For storing documents for offline use
+  - [Cache Manifest](https://developer.mozilla.org/en-US/docs/Web/HTML/Using_the_application_cache)
+    - For a fall back interface for offline use
 - Written an obscure alt-js lang called PureScript
   - Haskell like staticly typed language designed with nice JS interope in mind
   - Originally choose it because I assumed it would something similar to parsec
   - This was actually the main reason I went with a libraries based approach
-
 
 # Local Development
 
