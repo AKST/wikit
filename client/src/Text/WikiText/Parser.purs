@@ -11,7 +11,6 @@ import Control.Alt
 
 import Data.WikiText.Tokens
 import Data.WikiText
-import qualified Data.Either as Either
 import qualified Data.Array as Array
 import qualified Util.Array as Array
 import qualified Data.Maybe as Maybe 
@@ -21,28 +20,35 @@ type WikiTextParser a = Parser [WikiToken] a
 
 
 wikiText :: WikiTextParser [WikiText]
-wikiText = pure [] 
+wikiText = syntax `manyTill` match EndOfInput 
 
 
--- syntax :: WikiTextParser WikiText
--- syntax = paragraph
--- 
--- 
--- paragraph :: WikiTextParser WikiText
--- paragraph = Paragraph <$> anyText `manyTill` match EndOfInput 
+syntax :: WikiTextParser WikiText
+syntax = heading
+     <|> paragraph
+     <|> fail "unsupported token"
  
 
--- heading = do
---   size <- getHeadingDelimiter  
---   text <- textTillHeadingEndOf size 
---   pure (Heading size text) where
--- 
---     getHeadingDelimiter = ambigiousDelimiter HeadingType >>= 
---       \delimiter -> case delimiter of 
---         AmbigiousDelimiter (Heading size) -> pure size
---         _                                 -> empty 
--- 
---     textTillHeadingEndOf size = wikiText `endBy` (match (DeHeading size)) 
+--
+-- A paragraph is made up of more text atom. 
+--
+paragraph :: WikiTextParser WikiText
+paragraph = Paragraph <$> anyText `many1Till` delimiter where
+  delimiter = match Linebreak <|> lookAhead (match EndOfInput)
+ 
+
+heading :: WikiTextParser WikiText
+heading = try (nextType LinebreakType) *> do
+  size <- getHeadingDelimiter  
+  text <- textTillHeadingOf size 
+  pure (Heading size text) where
+
+    getHeadingDelimiter = ambigiousDelimiter HeadingType >>= getSize where 
+      getSize (DeHeading size) = pure size
+      getSize _                = fail "getHeadingDelimiter: not a heading" 
+
+    textTillHeadingOf size = anyText `manyTill` delimiter where
+      delimiter = match (AmbigiousDelimiter (DeHeading size)) 
 
 
 --
@@ -50,36 +56,47 @@ wikiText = pure []
 --
 
 anyText :: WikiTextParser WikiAtom
-anyText = word
+anyText = choices <?> "any text" where 
+  choices = word
 
 
 word :: WikiTextParser WikiAtom
-word = tokenToSyntax <$> skipSpace (nextIs WordType) where
+word = (tokenToSyntax <$> skipSpace (try (nextType WordType))) <?> "word" where
   tokenToSyntax (Word text) = (WordAtom text)
 
--- 
--- -- 
--- -- -- predicates
--- -- 
--- 
--- data AmbigiousDelimiterType
---   = HeadingType
---   | FormatType
--- 
--- 
--- ambigiousDelimiter :: AmbigiousDelimiterType -> DocParser WikiToken
--- ambigiousDelimiter tokenType = nextIs ADelimiterType >>= impl tokenType where
---   impl HeadingType token@(AmbigiousDelimiter (DeHeading _)) = pure token
---   impl FormatType  token@(AmbigiousDelimiter (DeFormat _))  = pure token
---   impl _           _                                        = empty
 
 -- 
+-- -- predicates
+-- 
+ 
+
+data AmbigiousDelimiterType
+  = HeadingType
+  | FormatType
+
+
+instance eqAmbigiousDelimiterType :: Eq AmbigiousDelimiterType where
+  (/=) l r = not (l == r)
+  (==) HeadingType HeadingType = true
+  (==) FormatType FormatType = true
+  (==) _ _ = false
+
+
+ambigiousDelimiter :: AmbigiousDelimiterType -> WikiTextParser AmbigiousDelimiter
+ambigiousDelimiter tokenType = nextType ADelimiterType >>= impl where
+
+  impl (AmbigiousDelimiter token@(DeHeading _)) | tokenType == HeadingType = pure token
+  impl (AmbigiousDelimiter token@(DeFormat _))  | tokenType == FormatType = pure token
+  impl e = fail ("somehow " ++ show e ++ " was passed to ambigiousDelimiter")
+
+ 
 -- delimiterOpening :: Delimiter -> DocParser WikiToken
--- delimiterOpening delimterType = nextIs ODelimiterType >>= \delimter ->
+-- delimiterOpening delimterType = nextType ODelimiterType >>= \delimter ->
 --   case delimter of
 --     OpeningDelimiter otherType | otherType == delimterType -> pure delimter
 --     _                                                      -> empty
--- 
+
+
 -- 
 -- -- methods
 --   
@@ -89,22 +106,43 @@ data TokenType
   | ADelimiterType
   | WordType
   | SpaceType
+  | LinebreakType
+  | EndOfInputType
 
 
-nextIs :: TokenType -> WikiTextParser WikiToken
-nextIs tokenType = token >>= matchType tokenType where 
-  matchType WordType token@(Word _) = pure token
-  matchType SpaceType token@(Space) = pure token
-  matchType ODelimiterType token@(OpeningDelimiter _)   = pure token
-  matchType ADelimiterType token@(AmbigiousDelimiter _) = pure token
-  matchType _ (Ambigious choices) = firstMatch choices where 
-    firstMatch (x:xs) = matchType tokenType x <|> firstMatch xs 
+instance eqTokenType :: Eq TokenType where
+  (/=) l r = not (l == r)
+
+  (==) ODelimiterType ODelimiterType = true
+  (==) ADelimiterType ADelimiterType = true
+  (==) WordType WordType = true
+  (==) SpaceType SpaceType = true
+  (==) LinebreakType LinebreakType = true
+  (==) EndOfInputType EndOfInputType = true
+  (==) _ _ = false
+
+
+--
+-- a more general match so we can match on the type of token
+-- as opposed to the exact value of the token.
+--
+nextType :: TokenType -> WikiTextParser WikiToken
+nextType tokenType = token >>= matchType where 
+
+  matchType token@(Word _)               | tokenType == WordType = pure token
+  matchType token@(Space)                | tokenType == SpaceType = pure token
+  matchType token@(AmbigiousDelimiter _) | tokenType == ADelimiterType = pure token
+  matchType token@(OpeningDelimiter _)   | tokenType == ODelimiterType = pure token
+  matchType token@(EndOfInput)           | tokenType == EndOfInputType = pure token
+  matchType token@(Linebreak)            | tokenType == LinebreakType = pure token 
+  matchType (Ambigious choices) = firstMatch choices where 
+    firstMatch (x:xs) = matchType x <|> firstMatch xs 
     firstMatch []     = empty  
-  matchType _ _ = empty
+  matchType _ = empty
 
  
 skipSpace :: forall a. WikiTextParser a -> WikiTextParser a
-skipSpace parser = skipMany (nextIs SpaceType) *> parser 
+skipSpace parser = skipMany (match Space) *> parser 
 
 
 -- 

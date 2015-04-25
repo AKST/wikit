@@ -22,22 +22,28 @@ tests = do
   describe "Text.WikiText.Parser" do
     describe "empty" do
       it "results in empty doc" do
-        doc <- wikiText []
+        doc <- wikiText [EndOfInput]
         doc @?= []
 
-
     describe "paragraph" do
-      it "hello world" do
-        doc <- wikiText [Word "hello", Space, Word "world"]
-        doc @?= [Paragraph [WordAtom "hello", WordAtom "world"]]
+      it "hello" do
+        doc <- wikiText [Word "hello", EndOfInput]
+        doc @?= [Paragraph [WordAtom "hello"]]
 
+      it "hello world" do
+        doc <- wikiText [
+          Word "hello", Space, 
+          Word "world", EndOfInput]
+        doc @?= [Paragraph [WordAtom "hello", WordAtom "world"]]
 
     describe "heading" do
       it "standalone" do
         doc <- wikiText [
+          Linebreak,
           AmbigiousDelimiter (DeHeading 6),
           Word "hello", Space, Word "world",
-          AmbigiousDelimiter (DeHeading 6) 
+          AmbigiousDelimiter (DeHeading 6), 
+          EndOfInput
         ]
         doc @?= [Heading 6 [
           WordAtom "hello", WordAtom "world"
